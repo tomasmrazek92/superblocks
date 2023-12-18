@@ -39,3 +39,18 @@ const disableScroll = () => {
   menuOpenAnim = !menuOpenAnim;
   console.log(menuOpenAnim);
 };
+
+// Add Class on Scroll
+function checkNav() {
+  var scroll = $(window).scrollTop();
+  let nav = $('.nav_wrapper');
+  if (typeof nav.attr('fixed-by-default') === 'undefined') {
+    if (scroll >= 100) {
+      nav.addClass('fixed');
+    } else if (scroll === 0) {
+      nav.removeClass('fixed');
+    }
+  }
+}
+$(window).scroll(checkNav);
+checkNav();

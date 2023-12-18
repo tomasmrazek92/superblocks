@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../bin/live-reload.js", "../src/homepage.js"],
+  "sourcesContent": ["new EventSource(`${SERVE_ORIGIN}/esbuild`).addEventListener('change', () => location.reload());\n", "\n// Dynamic Links for Tabs\n  $('.w-tab-link [data-href]').click(function() {\n    var url = $(this).attr('data-href');\n    var isFullUrl = url.startsWith('http://') || url.startsWith('https://');\n\n    if (isFullUrl) {\n      // For full URLs, check the domain\n      var currentDomain = window.location.hostname;\n      var urlDomain = new URL(url).hostname;\n\n      if (urlDomain !== currentDomain) {\n        window.open(url, '_blank');\n      } else {\n        window.location.href = url;\n      }\n    } else {\n      // For relative paths, simply navigate to the path\n      window.location.pathname = url;\n    }\n  });\n\n\n"],
+  "mappings": ";;;AAAA,MAAI,YAAY,GAAG,iCAAsB,EAAE,iBAAiB,UAAU,MAAM,SAAS,OAAO,CAAC;;;ACE3F,IAAE,yBAAyB,EAAE,MAAM,WAAW;AAC5C,QAAI,MAAM,EAAE,IAAI,EAAE,KAAK,WAAW;AAClC,QAAI,YAAY,IAAI,WAAW,SAAS,KAAK,IAAI,WAAW,UAAU;AAEtE,QAAI,WAAW;AAEb,UAAI,gBAAgB,OAAO,SAAS;AACpC,UAAI,YAAY,IAAI,IAAI,GAAG,EAAE;AAE7B,UAAI,cAAc,eAAe;AAC/B,eAAO,KAAK,KAAK,QAAQ;AAAA,MAC3B,OAAO;AACL,eAAO,SAAS,OAAO;AAAA,MACzB;AAAA,IACF,OAAO;AAEL,aAAO,SAAS,WAAW;AAAA,IAC7B;AAAA,EACF,CAAC;",
+  "names": []
+}
