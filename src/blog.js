@@ -53,6 +53,10 @@ window.fsAttributes.push([
 
     // The `renderitems` event runs whenever the list renders items after switching pages.
     listInstance.on('renderitems', (renderedItems) => {
+      let { currentPage } = listInstance;
+      currentPage > 1
+        ? $('.blog-index_wrap').addClass('filtered')
+        : $('.blog-index_wrap').removeClass('filtered');
       blogAuthorsHandler($('.blog-index_item'));
       togglePagination();
     });
