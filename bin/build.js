@@ -7,7 +7,13 @@ const BUILD_DIRECTORY = 'dist';
 const PRODUCTION = process.env.NODE_ENV === 'production';
 
 // Config entrypoint files
-const ENTRY_POINTS = ['src/homepage.js', 'src/index.js', 'src/utils/finsweet-video-autoplay.js'];
+const ENTRY_POINTS = [
+  'src/homepage.js',
+  'src/index.js',
+  'src/customers.js',
+  'src/blog.js',
+  'src/utils/finsweet-video-autoplay.js',
+];
 
 // Config dev serving
 const LIVE_RELOAD = !PRODUCTION;
