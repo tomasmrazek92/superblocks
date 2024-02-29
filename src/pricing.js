@@ -192,6 +192,37 @@ function initCalc(calc) {
       sumButton.attr('href', 'https://www.superblocks.com/book-a-demo');
     }
   }
+
+  // Workaround for minimum drag style
+  function enforceMinLeftPosition(element, minLeft) {
+    const currentLeft = parseInt(window.getComputedStyle(element).left, 10);
+    if (currentLeft < minLeft) {
+      element.style.left = `${minLeft}px`;
+    }
+  }
+
+  // Initialize and observe each slider handle
+  function observeSliderHandles() {
+    const handles = document.querySelectorAll('.pricing-calc_handle');
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'style') {
+          // Assuming 100px as the minimum left value
+          enforceMinLeftPosition(mutation.target, 20);
+        }
+      });
+    });
+
+    handles.forEach((handle) => {
+      observer.observe(handle, { attributes: true, attributeFilter: ['style'] });
+      // Ensure initial position is not below minimum for each handle
+      enforceMinLeftPosition(handle, 20);
+    });
+  }
+
+  // Call the function to start observing
+  observeSliderHandles();
 }
 
 // Init
