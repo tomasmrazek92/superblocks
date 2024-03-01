@@ -99,7 +99,6 @@ const manageSwiperInstance = (
     if (existingSwiper) {
       existingSwiper.destroy(true, true);
       delete swipers[classSelector][uniqueKey];
-      console.log('Swiper destroyed for', swiperSelector, 'with uniqueKey', uniqueKey);
     }
   };
 
@@ -122,7 +121,6 @@ const manageSwiperInstance = (
               initialized: true,
             };
             observer.disconnect();
-            console.log('Swiper initialized for', swiperSelector, 'with uniqueKey', uniqueKey);
           }
         }
       });

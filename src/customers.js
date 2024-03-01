@@ -13,12 +13,11 @@ const swiperInstances = [
           slidesPerView: 1,
           slidesPerGroup: 1,
           grid: {},
-          autoHeight: true,
         },
         992: {
           spaceBetween: 0,
           slidesPerView: 2,
-          slidesPerGroup: 4,
+          slidesPerGroup: 2,
           grid: {
             fill: 'column',
             rows: 2,
@@ -37,7 +36,6 @@ $(document).ready(() => {
       $('.cstm-tstmn_item')
         .slice(0, 2)
         .each(function () {
-          console.log($(this).outerHeight());
           totalHeight += $(this).outerHeight();
         });
 
@@ -50,10 +48,16 @@ $(document).ready(() => {
 
   // Init
   calculateHeight();
-  initSwipers(swiperInstances);
+  setTimeout(() => {
+    initSwipers(swiperInstances);
+  }, 300);
 
   // Resize
   $(window).on('resize', function () {
     calculateHeight();
+
+    setTimeout(() => {
+      swipers = {};
+    }, 300);
   });
 });
