@@ -12,14 +12,16 @@ const swiperInstances = [
           spaceBetween: 20,
           slidesPerView: 1,
           slidesPerGroup: 1,
+          grid: {},
+          autoHeight: true,
         },
         992: {
           spaceBetween: 0,
           slidesPerView: 2,
-          slidesPerGroup: 6,
+          slidesPerGroup: 4,
           grid: {
             fill: 'column',
-            rows: 3,
+            rows: 2,
           },
         },
       },
@@ -33,7 +35,7 @@ $(document).ready(() => {
     if ($(window).width() >= 992) {
       let totalHeight = 0;
       $('.cstm-tstmn_item')
-        .slice(0, 3)
+        .slice(0, 2)
         .each(function () {
           console.log($(this).outerHeight());
           totalHeight += $(this).outerHeight();
