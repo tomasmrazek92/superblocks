@@ -7,6 +7,7 @@ const swiperInstances = [
     '.cstm-tstmn_wrap',
     'testimonials',
     {
+      autoplay: { delay: 5000 },
       breakpoints: {
         0: {
           spaceBetween: 20,
