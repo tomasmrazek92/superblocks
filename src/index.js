@@ -1,5 +1,5 @@
 $(document).ready(function () {
-  // --- Video Modaly
+  // #region Video Modal
   const videoModalSelector = '.video-modal-wrap';
   const videoSelector = `${videoModalSelector} video`;
 
@@ -14,6 +14,7 @@ $(document).ready(function () {
       $video[0].load();
       const playPromise = $video[0].play();
       if (playPromise !== undefined) {
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         playPromise.then(() => {}).catch(() => {});
       }
     }
@@ -28,10 +29,13 @@ $(document).ready(function () {
     $('[data-toggle="close-video"]').on('click', closeVideo);
   }
 
+  // Init
   setupVideoTriggers();
 
-  // --- Nav Open/Close
-  let ham = 'nav_burger';
+  // #endregion
+
+  // #region Nav Open/Close
+  let ham = '.nav_burger';
   let menuOpen = false;
   let scrollPosition;
   $(ham).on('click', function () {
@@ -39,15 +43,13 @@ $(document).ready(function () {
   });
 
   const disableScroll = () => {
-    if (!menuOpenAnim) {
+    if (!menuOpen) {
       scrollPosition = $(window).scrollTop();
-      console.log(scrollPosition);
       $('html, body').scrollTop(0).addClass('overflow-hidden');
     } else {
       $('html, body').scrollTop(scrollPosition).removeClass('overflow-hidden');
     }
-    menuOpenAnim = !menuOpenAnim;
-    console.log(menuOpenAnim);
+    menuOpen = !menuOpen;
   };
 
   // Add Class on Scroll
@@ -62,6 +64,34 @@ $(document).ready(function () {
       }
     }
   }
+
+  // Init
   $(window).scroll(checkNav);
   checkNav();
+  // #endregion
+
+  // #region Modal Opens
+  function setupModalTriggers() {
+    const modalTriggers = $('[data-toggle="modal"]');
+    const modal = $('[data-element="modal"]');
+    const modalClose = $('[data-toggle="modal-close"]');
+
+    if (!modalTriggers.length) return;
+
+    function showModal() {
+      modal.fadeIn();
+      disableScroll();
+    }
+
+    function closeModal() {
+      modal.fadeOut();
+      disableScroll();
+    }
+
+    modalTriggers.on('click', showModal);
+    modalClose.on('click', closeModal);
+  }
+
+  // Init
+  setupModalTriggers();
 });

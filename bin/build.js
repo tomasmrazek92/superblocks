@@ -14,6 +14,7 @@ const ENTRY_POINTS = [
   'src/blog.js',
   'src/blog-detail.js',
   'src/pricing.js',
+  'src/integrations.js',
   'src/utils/finsweet-video-autoplay.js',
 ];
 
