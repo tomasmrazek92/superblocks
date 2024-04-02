@@ -23,15 +23,18 @@ window.blogAuthorsHandler = function (item) {
 };
 $(document).ready(function () {
   // Featured
-  $('[data-featured-authors]').load(
-    `/blog/${featuredSlug} [data-authors-load]`,
-    function (response, status, xhr) {
-      if (status === 'success') {
-        // Call your callback function here, passing any necessary data
-        blogAuthorsHandler($('.blog-index_article-featured'));
+  let featuredAuthors = $('[data-featured-authors]');
+  if (featuredAuthors.length) {
+    featuredAuthors.load(
+      `/blog/${featuredSlug} [data-authors-load]`,
+      function (response, status, xhr) {
+        if (status === 'success') {
+          // Call your callback function here, passing any necessary data
+          blogAuthorsHandler($('.blog-index_article-featured'));
+        }
       }
-    }
-  );
+    );
+  }
   /* Load */
   blogAuthorsHandler($('.blog-index_item'));
 });
@@ -42,7 +45,7 @@ window.fsAttributes = window.fsAttributes || [];
 window.fsAttributes.push([
   'cmsload',
   (listInstances) => {
-    if ($('.blog-index_item').length > 0) {
+    if ($('[fs-cmsload-element="list"] .w-dyn-item').length > 0) {
       setTimeout(() => {
         $('.blog-index_tag-search-wrap').addClass('loaded');
         togglePagination();
