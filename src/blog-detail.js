@@ -1,3 +1,5 @@
+import { copyUrl } from './utils/globalFunctions';
+
 $(document).ready(function () {
   // Top Author
   if ($('.blog-detail_author-item').length === 1) {
@@ -36,13 +38,5 @@ $(document).ready(function () {
   });
 
   // Copy URL
-
-  var $temp = $('<input>');
-  var $url = $(location).attr('href');
-  $('#copyUrl').click(function () {
-    $('body').append($temp);
-    $temp.val($url).select();
-    document.execCommand('copy');
-    $temp.remove();
-  });
+  copyUrl();
 });

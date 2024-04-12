@@ -1,4 +1,4 @@
-// --- Swipers Start ---
+// #region Swipers Function
 let windowWidth = window.innerWidth;
 
 // Create an object to hold unique counters for each classSelector.
@@ -63,6 +63,9 @@ const getMergedSwiperOptions = (options, uniqueKey) => {
       bulletActiveClass: 'active',
       bulletClass: 'swiper-bullet',
       clickable: true,
+      renderBullet: function (index, className) {
+        return '<span class="' + className + '">' + '<b></b>' + '</span>';
+      },
     },
   });
 };
@@ -161,3 +164,29 @@ export const initSwipers = (swiperInstances, swipersState) => {
     }
   });
 };
+
+//#endregion
+
+export function copyUrl() {
+  // Paste here
+  var $temp = $('<input>');
+  var $url = $(location).attr('href');
+  var label = $('#copyUrl_label');
+  let timeOut;
+
+  // Click
+  $('#copyUrl').click(function () {
+    $('body').append($temp);
+    $temp.val($url).select();
+    document.execCommand('copy');
+    $temp.remove();
+
+    clearTimeout(timeOut); // Corrected the function name and variable consistency
+    label.hide();
+    label.fadeIn();
+    timeOut = setTimeout(() => {
+      // Corrected the function name and fixed variable naming consistency
+      label.fadeOut();
+    }, 2000);
+  });
+}

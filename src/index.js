@@ -94,4 +94,6 @@ $(document).ready(function () {
 
   // Init
   setupModalTriggers();
+
+  // #endregion
 });

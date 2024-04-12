@@ -16,6 +16,8 @@ const ENTRY_POINTS = [
   'src/pricing.js',
   'src/integrations.js',
   'src/utils/finsweet-video-autoplay.js',
+  'src/quote-carousel.js',
+  'src/static-article.js',
 ];
 
 // Config dev serving
