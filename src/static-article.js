@@ -43,6 +43,39 @@ function dynamicAnchorLinks() {
 }
 // #endregion
 
+// #region Table Column Reorder
+function reorderForm(table, order) {
+  // Reorder the header row, account for the use of id instead of headers
+  reorderColumns(order, $(table).find('thead tr'), true);
+
+  // Reorder each body row, also excluding the first <th>
+  $(table)
+    .find('tbody tr')
+    .each(function () {
+      reorderColumns(order, $(this), false);
+    });
+
+  function reorderColumns(orderArray, $row, isHeader) {
+    var $cells = isHeader ? $row.children('th:not(:first-child)') : $row.children('td');
+    var $firstTh = $row.children('th:first-child');
+    var $placeholder = $('<td>').hide();
+
+    $placeholder.appendTo($row);
+
+    orderArray.forEach(function (headerId) {
+      var selector = isHeader ? '#' + headerId : '[headers*="' + headerId + '"]';
+      $cells.filter(selector).appendTo($row);
+    });
+
+    $placeholder.remove();
+    $firstTh.prependTo($row);
+  }
+}
+
+// Expose reorderForm to the global window object
+window.reorderForm = reorderForm;
+// #endregion
+
 $(document).ready(() => {
   // Load Functions
   dynamicAnchorLinks();
