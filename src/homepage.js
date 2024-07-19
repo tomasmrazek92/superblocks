@@ -20,18 +20,6 @@ $('.w-tab-link [data-href]').click(function () {
 });
 
 // Testimonials
-const swiperTestContent = new Swiper('.cases_content-slide', {
-  slidesPerView: 1,
-  effect: 'fade',
-  fadeEffect: {
-    crossFade: true,
-  },
-  slideToClickedSlide: true,
-  allowTouchMove: false,
-  autoHeight: true,
-  centeredSlides: true,
-  loop: true,
-});
 
 const swiperTestNav = new Swiper('.cases_nav-slide', {
   slidesPerView: 'auto',
@@ -42,11 +30,39 @@ const swiperTestNav = new Swiper('.cases_nav-slide', {
   },
   centeredSlides: true,
   loop: true,
-  // Add controller
-  controller: {
-    control: swiperTestContent,
+  breakpoints: {
+    0: {
+      centeredSlides: false,
+    },
+    768: {
+      centeredSlides: true,
+    },
+  },
+  on: {
+    init: (swiper) => {
+      updateQuote(swiper.realIndex);
+    },
+    slideChange: (swiper) => {
+      updateQuote(swiper.realIndex);
+    },
   },
 });
+
+function updateQuote(index) {
+  let slide = $('.swiper-slide.case-study').eq(index);
+  let el = slide.find('.cases_nav-item');
+  let quoteText = $(el).attr('data-quote');
+  let nameText = $(el).attr('data-name');
+  let roleText = $(el).attr('data-role');
+  let picSrc = $(el).find('.w-embed').find('div').attr('data-pic');
+  let visualSrc = $(el).find('.w-embed').find('div').attr('data-visual');
+
+  $('[data-quote="el"]').text(quoteText);
+  $('[data-name="el"]').text(nameText);
+  $('[data-role="el"]').text(roleText);
+  $('[data-pic="el"]').attr('src', picSrc);
+  $('[data-visual="el"]').attr('src', visualSrc);
+}
 
 // Platform Tabs
 // Encapsulate Swiper initialization within a function
