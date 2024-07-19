@@ -20,23 +20,50 @@ $('.w-tab-link [data-href]').click(function () {
 });
 
 // Testimonials
-const swiperTestimonials = new Swiper('.cases_nav', {
+const swiperTestContent = new Swiper('.cases_content-slide', {
+  slidesPerView: 1,
+  effect: 'fade',
+  fadeEffect: {
+    crossFade: true,
+  },
+  slideToClickedSlide: true,
+  allowTouchMove: false,
+  autoHeight: true,
+  loop: true,
+  loopAdditionalSlides: 20,
+  breakpoints: {
+    0: {
+      centeredSlides: false,
+    },
+    768: {
+      centeredSlides: true,
+    },
+  },
+  controller: {
+    control: swiperTestNav,
+  },
+});
+
+const swiperTestNav = new Swiper('.cases_nav-slide', {
   slidesPerView: 'auto',
+  slideToClickedSlide: true,
   navigation: {
     nextEl: '.swiper-arrow.next',
     prevEl: '.swiper-arrow.prev',
   },
+  loop: true,
+  loopAdditionalSlides: 20,
+  centeredSlides: true,
+  // Add controller
+  controller: {
+    control: swiperTestContent,
+  },
   breakpoints: {
     0: {
-      loop: false,
       centeredSlides: false,
-      autoHeight: true,
     },
     768: {
-      loop: true,
-      loopAdditionalSlides: 20,
       centeredSlides: true,
-      autoHeight: true,
     },
   },
 });
@@ -50,7 +77,7 @@ const initSwiper = () => {
   return new Swiper('.platform-tabs_content', {
     slidesPerView: 1,
     effect: 'fade',
-    allowTouchMove: false,
+
     fadeEffect: {
       crossFade: true,
     },
@@ -65,6 +92,15 @@ const initSwiper = () => {
       bulletClass: 'slider-dot',
       clickable: true,
     },
+    breakpoints: {
+      0: {
+        allowTouchMove: true,
+      },
+      992: {
+        allowTouchMove: false,
+      },
+    },
+
     on: {
       init: (swiper) => {
         hightlightItem(swiper.realIndex);
