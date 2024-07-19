@@ -43,7 +43,7 @@ const swiperTestNav = new Swiper('.cases_nav-slide', {
       updateQuote(swiper.realIndex);
     },
     slideChange: (swiper) => {
-      updateQuote(swiper.realIndex);
+      // updateQuote(swiper.realIndex);
     },
   },
 });
@@ -72,11 +72,8 @@ let swiperTabs;
 const initSwiper = () => {
   return new Swiper('.platform-tabs_content', {
     slidesPerView: 1,
-    effect: 'fade',
-
-    fadeEffect: {
-      crossFade: true,
-    },
+    spaceBetween: 8,
+    speed: 0,
     autoplay: {
       delay: 6000,
       disableOnInteraction: false,
