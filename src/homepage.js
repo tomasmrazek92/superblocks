@@ -39,9 +39,6 @@ const swiperTestContent = new Swiper('.cases_content-slide', {
       centeredSlides: true,
     },
   },
-  controller: {
-    control: swiperTestNav,
-  },
 });
 
 const swiperTestNav = new Swiper('.cases_nav-slide', {
