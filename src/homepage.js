@@ -29,16 +29,8 @@ const swiperTestContent = new Swiper('.cases_content-slide', {
   slideToClickedSlide: true,
   allowTouchMove: false,
   autoHeight: true,
+  centeredSlides: true,
   loop: true,
-  loopAdditionalSlides: 20,
-  breakpoints: {
-    0: {
-      centeredSlides: false,
-    },
-    768: {
-      centeredSlides: true,
-    },
-  },
 });
 
 const swiperTestNav = new Swiper('.cases_nav-slide', {
@@ -48,20 +40,11 @@ const swiperTestNav = new Swiper('.cases_nav-slide', {
     nextEl: '.swiper-arrow.next',
     prevEl: '.swiper-arrow.prev',
   },
-  loop: true,
-  loopAdditionalSlides: 20,
   centeredSlides: true,
+  loop: true,
   // Add controller
   controller: {
     control: swiperTestContent,
-  },
-  breakpoints: {
-    0: {
-      centeredSlides: false,
-    },
-    768: {
-      centeredSlides: true,
-    },
   },
 });
 
