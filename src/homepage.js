@@ -20,7 +20,6 @@ $('.w-tab-link [data-href]').click(function () {
 });
 
 // Testimonials
-
 const swiperTestNav = new Swiper('.cases_nav-slide', {
   slidesPerView: 'auto',
   slideToClickedSlide: true,
@@ -75,7 +74,7 @@ const initSwiper = () => {
     spaceBetween: 8,
     speed: 0,
     autoplay: {
-      delay: 6000,
+      delay: 15000,
       disableOnInteraction: false,
     },
     pagination: {
