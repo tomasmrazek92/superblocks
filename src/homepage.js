@@ -72,7 +72,6 @@ const initSwiper = () => {
   return new Swiper('.platform-tabs_content', {
     slidesPerView: 1,
     spaceBetween: 8,
-    speed: 0,
     autoplay: {
       delay: 15000,
       disableOnInteraction: false,
@@ -87,9 +86,11 @@ const initSwiper = () => {
     breakpoints: {
       0: {
         allowTouchMove: true,
+        speed: 800,
       },
       992: {
         allowTouchMove: false,
+        speed: 0,
       },
     },
 
