@@ -32,7 +32,7 @@ window.fsAttributes.push([
 
     // Add the associated count
     $('[total-count]').text(filterInstance.items.length);
-    $('.intgr-types_item').each(function () {
+    $('.w-dyn-items .intgr-types_item').each(function () {
       // In each '.intgr-types_item', find the span and get its text
       var spanText = $(this).find('span').text();
 
