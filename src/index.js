@@ -34,6 +34,36 @@ $(document).ready(function () {
 
   // #endregion
 
+  // #region Marquee
+  // Function to check if element is in viewport
+  function isInViewport(element) {
+    var elementTop = $(element).offset().top;
+    var elementBottom = elementTop + $(element).outerHeight();
+
+    var viewportTop = $(window).scrollTop();
+    var viewportBottom = viewportTop + $(window).height();
+
+    return elementBottom > viewportTop && elementTop < viewportBottom;
+  }
+
+  // Function to add class when element is in view
+  function checkAndAddClass() {
+    var element = $('.hp_hero-logo-cms-wrap');
+    if (element) {
+      if (isInViewport(element)) {
+        element.addClass('cc-animated'); // Replace 'your-class' with the class you want to add
+        $(window).off('scroll', checkAndAddClass); // Remove scroll event listener once the class is added
+      }
+    }
+  }
+
+  // Check on scroll
+  $(window).on('scroll', checkAndAddClass);
+
+  // Initial check in case the element is already in view
+  checkAndAddClass();
+  // #endregion
+
   // #region Nav Open/Close
   let ham = '.nav_burger';
   let menuOpen = false;

@@ -42,7 +42,7 @@ const swiperTestNav = new Swiper('.cases_nav-slide', {
       updateQuote(swiper.realIndex);
     },
     slideChange: (swiper) => {
-      // updateQuote(swiper.realIndex);
+      updateQuote(swiper.realIndex);
     },
   },
 });
@@ -50,6 +50,7 @@ const swiperTestNav = new Swiper('.cases_nav-slide', {
 function updateQuote(index) {
   let slide = $('.swiper-slide.case-study').eq(index);
   let el = slide.find('.cases_nav-item');
+  let companyText = $(el).attr('data-company');
   let quoteText = $(el).attr('data-quote');
   let nameText = $(el).attr('data-name');
   let roleText = $(el).attr('data-role');
@@ -60,7 +61,14 @@ function updateQuote(index) {
   $('[data-name="el"]').text(nameText);
   $('[data-role="el"]').text(roleText);
   $('[data-pic="el"]').attr('src', picSrc);
-  $('[data-visual="el"]').attr('src', visualSrc);
+  if (companyText === 'Alchemy') {
+    $('.cases_lightbox').css('display', 'flex');
+    $('[data-visual="el"]').hide();
+  } else {
+    $('[data-visual="el"]').attr('src', visualSrc);
+    $('.cases_lightbox').hide();
+    $('[data-visual="el"]').show();
+  }
 }
 
 // Platform Tabs
