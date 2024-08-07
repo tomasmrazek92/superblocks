@@ -21,21 +21,23 @@ $('.w-tab-link [data-href]').click(function () {
 
 // Testimonials
 const swiperTestNav = new Swiper('.cases_nav-slide', {
-  slidesPerView: 'auto',
+  slidesPerView: 4,
   slideToClickedSlide: true,
   threshold: 20,
   navigation: {
     nextEl: '.swiper-arrow.next',
     prevEl: '.swiper-arrow.prev',
   },
-  centeredSlides: true,
   loop: true,
   breakpoints: {
     0: {
-      centeredSlides: false,
+      slidesPerView: 'auto',
     },
     768: {
-      centeredSlides: true,
+      slidesPerView: 3,
+    },
+    992: {
+      slidesPerView: 4,
     },
   },
   on: {
