@@ -51,7 +51,6 @@ const swiperTestNav = new Swiper('.cases_nav-slide', {
 });
 
 function updateQuote(index) {
-  console.log(index);
   let slide = $('.swiper-slide.case-study').not('.swiper-slide-duplicate').eq(index);
   let el = slide.find('.cases_nav-item');
   let companyText = $(el).attr('data-company');
@@ -81,6 +80,7 @@ function updateQuote(index) {
     $('[data-link="el"]').css('pointer-events', 'auto');
   } else {
     $('[data-link="el"]').css('pointer-events', 'none');
+    $('[data-link="el"]').attr('href', '#');
   }
 }
 
