@@ -23,6 +23,7 @@ $('.w-tab-link [data-href]').click(function () {
 const swiperTestNav = new Swiper('.cases_nav-slide', {
   slidesPerView: 'auto',
   slideToClickedSlide: true,
+  threshold: 20,
   navigation: {
     nextEl: '.swiper-arrow.next',
     prevEl: '.swiper-arrow.prev',
@@ -56,11 +57,13 @@ function updateQuote(index) {
   let roleText = $(el).attr('data-role');
   let picSrc = $(el).find('.w-embed').find('div').attr('data-pic');
   let visualSrc = $(el).find('.w-embed').find('div').attr('data-visual');
+  let link = $(el).attr('data-link');
 
   $('[data-quote="el"]').text(quoteText);
   $('[data-name="el"]').text(nameText);
   $('[data-role="el"]').text(roleText);
   $('[data-pic="el"]').attr('src', picSrc);
+
   if (companyText === 'Alchemy') {
     $('.cases_lightbox').css('display', 'flex');
     $('[data-visual="el"]').hide();
@@ -68,6 +71,14 @@ function updateQuote(index) {
     $('[data-visual="el"]').attr('src', visualSrc);
     $('.cases_lightbox').hide();
     $('[data-visual="el"]').show();
+  }
+
+  console.log(link);
+  if (link !== '') {
+    $('[data-link="el"]').attr('href', link);
+    $('[data-link="el"]').css('pointer-events', 'auto');
+  } else {
+    $('[data-link="el"]').css('pointer-events', 'none');
   }
 }
 
