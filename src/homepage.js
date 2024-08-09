@@ -34,10 +34,10 @@ const swiperTestNav = new Swiper('.cases_nav-slide', {
       slidesPerView: 'auto',
     },
     768: {
-      slidesPerView: 3,
+      slidesPerView: 4,
     },
     992: {
-      slidesPerView: 4,
+      slidesPerView: 5,
     },
   },
   on: {
