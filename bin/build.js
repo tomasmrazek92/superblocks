@@ -15,10 +15,10 @@ const ENTRY_POINTS = [
   'src/blog-detail.js',
   'src/pricing.js',
   'src/integrations.js',
+  'src/uiblocks.js',
   'src/utils/finsweet-video-autoplay.js',
   'src/quote-carousel.js',
   'src/static-article.js',
-  'src/cases.js',
 ];
 
 // Config dev serving

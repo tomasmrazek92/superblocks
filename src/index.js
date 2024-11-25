@@ -49,7 +49,7 @@ $(document).ready(function () {
   // Function to add class when element is in view
   function checkAndAddClass() {
     var element = $('.hp_hero-logo-cms-wrap');
-    if (element) {
+    if (element.length) {
       if (isInViewport(element)) {
         element.addClass('cc-animated'); // Replace 'your-class' with the class you want to add
         $(window).off('scroll', checkAndAddClass); // Remove scroll event listener once the class is added
