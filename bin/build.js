@@ -19,6 +19,7 @@ const ENTRY_POINTS = [
   'src/utils/finsweet-video-autoplay.js',
   'src/quote-carousel.js',
   'src/static-article.js',
+  'src/cases.js',
 ];
 
 // Config dev serving
