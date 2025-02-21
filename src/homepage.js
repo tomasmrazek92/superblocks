@@ -182,9 +182,14 @@ initAITabs();
 
 // #region Customers
 const initCustomers = () => {
-  return new Swiper('.swiper.swiper-customers', {
+  // Initialize Swiper
+  const customerSwiper = new Swiper('.swiper.swiper-customers', {
     slidesPerView: 'auto',
     spaceBetween: 32,
+    threshold: 20,
+    resizeObserver: true,
+    observer: true,
+    observeParents: true,
     pagination: {
       el: `.customer_nav`,
       type: 'bullets',
@@ -193,9 +198,22 @@ const initCustomers = () => {
       clickable: true,
     },
   });
+
+  // Add click listener to slides
+  const slides = document.querySelectorAll('.swiper-customers .swiper-slide');
+  slides.forEach((slide, index) => {
+    slide.addEventListener('click', () => {
+      setTimeout(() => {
+        customerSwiper.update();
+        customerSwiper.slideTo(index);
+      }, 600);
+    });
+  });
+
+  return customerSwiper;
 };
 
-initCustomers();
+const customerSwiper = initCustomers();
 // #endregion
 
 // #region Centralize
@@ -206,7 +224,7 @@ const initCentralize = () => {
     if (window.innerWidth <= 767 && !customerSwiper) {
       customerSwiper = new Swiper('.swiper.swiper-centralize', {
         slidesPerView: 1,
-        spaceBetween: 32,
+        threshold: 20,
         pagination: {
           el: `.centralize_nav`,
           type: 'bullets',
