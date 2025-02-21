@@ -26,40 +26,55 @@ $('.w-tab-link [data-href]').click(function () {
 function initPlatTabs() {
   let swiperTabs;
 
-  if (!$('.platform-tabs_content').length) return;
+  if (!$('.ai-tabs_wrap').length) return;
 
   const initSwiper = () => {
-    return new Swiper('.platform-tabs_content', {
+    // Create a timeline for better control
+    const tl = gsap.timeline();
+
+    return new Swiper('.ai-tabs_slider', {
       slidesPerView: 1,
       spaceBetween: 8,
       autoplay: {
         delay: 15000,
         disableOnInteraction: false,
       },
-      pagination: {
-        el: '.platform-tabs_nav',
-        type: 'bullets',
-        bulletActiveClass: 'cc-active',
-        bulletClass: 'slider-dot',
-        clickable: true,
+      effect: 'fade',
+      fadeEffect: {
+        crossFade: true,
       },
-      breakpoints: {
-        0: {
-          allowTouchMove: true,
-          speed: 800,
-        },
-        992: {
-          allowTouchMove: false,
-          speed: 0,
-        },
-      },
-
       on: {
         init: (swiper) => {
           hightlightItem(swiper.realIndex);
+          gsap.killTweensOf('.ai-tabs_progress-line');
+          gsap.fromTo(
+            '.ai-tabs_progress-line',
+            { scaleX: 0 },
+            {
+              scaleX: 1,
+              duration: 15,
+              ease: 'none',
+            }
+          );
+        },
+        beforeSlideChange: () => {
+          // Immediately kill all tweens of this element
+          gsap.killTweensOf('.ai-tabs_progress-line');
+          gsap.set('.ai-tabs_progress-line', { scaleX: 0 });
         },
         slideChange: (swiper) => {
           hightlightItem(swiper.realIndex);
+          // Force a new tween
+          gsap.fromTo(
+            '.ai-tabs_progress-line',
+            { scaleX: 0 },
+            {
+              scaleX: 1,
+              duration: 15,
+              ease: 'none',
+              immediateRender: true,
+            }
+          );
         },
       },
     });
@@ -77,16 +92,16 @@ function initPlatTabs() {
     { threshold: 0.1 }
   ); // Adjust the threshold as needed
 
-  observer.observe(document.querySelector('.platform-tabs_content'));
+  observer.observe(document.querySelector('.ai-tabs_wrap'));
 
-  $('.platform-tabs_menu-item').on('click', function () {
-    var index = $('.platform-tabs_menu-item').index(this);
+  $('.ai-tabs_pane-item').on('click', function () {
+    var index = $('.ai-tabs_pane-item').index(this);
     swiperTabs.slideTo(index);
   });
 
   function hightlightItem(index) {
-    $('.platform-tabs_menu-item').removeClass('cc-active');
-    $('.platform-tabs_menu-item').eq(index).addClass('cc-active');
+    $('.ai-tabs_pane-item').removeClass('cc-active');
+    $('.ai-tabs_pane-item').eq(index).addClass('cc-active');
   }
 }
 // init
@@ -167,9 +182,16 @@ initAITabs();
 
 // #region Customers
 const initCustomers = () => {
-  return new Swiper('.hp_customer-collection-wrap', {
+  return new Swiper('.swiper.swiper-customers', {
     slidesPerView: 'auto',
     spaceBetween: 32,
+    pagination: {
+      el: `.customer_nav`,
+      type: 'bullets',
+      bulletActiveClass: 'cc-active',
+      bulletClass: 'slider-dot',
+      clickable: true,
+    },
   });
 };
 
@@ -182,9 +204,16 @@ const initCentralize = () => {
 
   const initializeSwiper = () => {
     if (window.innerWidth <= 767 && !customerSwiper) {
-      customerSwiper = new Swiper('.swiper-centralize', {
+      customerSwiper = new Swiper('.swiper.swiper-centralize', {
         slidesPerView: 1,
         spaceBetween: 32,
+        pagination: {
+          el: `.centralize_nav`,
+          type: 'bullets',
+          bulletActiveClass: 'cc-active',
+          bulletClass: 'slider-dot',
+          clickable: true,
+        },
       });
     } else if (customerSwiper) {
       customerSwiper.destroy(true, true);
