@@ -249,3 +249,22 @@ const initCentralize = () => {
 };
 
 initCentralize();
+
+// #endregion
+
+// #region Partner Slider
+let partnerSlider = new Swiper('.hp_partner-bottom', {
+  slidesPerView: 1,
+  spaceBetween: 32,
+  effect: 'fade',
+  fadeEffect: {
+    crossFade: true,
+  },
+  loop: true,
+  autoplay: {
+    delay: 3000,
+    disableOnInteraction: false,
+  },
+  threshold: 20,
+});
+// #endregion
