@@ -188,17 +188,6 @@ initPlatTabs();
 
 // #region Customers
 const initCustomers = () => {
-  // Create a ResizeObserver to watch for video size changes
-  const resizeObserver = new ResizeObserver((entries) => {
-    // When sizes change, update the swiper
-    if (typeof customerSwiper !== 'undefined') {
-      customerSwiper.update();
-    }
-  });
-
-  const swiperWrapper = document.querySelector('.swiper-customers');
-  const lastSwiperSlide = document.querySelector('.swiper-slide.is-customer-video:last-of-type');
-
   // Initialize Swiper
   const customerSwiper = new Swiper('.swiper.swiper-customers', {
     slidesPerView: 'auto',
@@ -212,7 +201,6 @@ const initCustomers = () => {
     freeMode: {
       enabled: true,
     },
-    slidesOffsetAfter: swiperWrapper.clientWidth - lastSwiperSlide.clientWidth,
     pagination: {
       el: `.customer_nav`,
       type: 'bullets',
@@ -223,78 +211,58 @@ const initCustomers = () => {
     on: {
       init: function () {
         initVimeoPlayer();
-
-        // Add ResizeObserver to all Vimeo player containers
-        $('[data-vimeo-player-init]').each(function () {
-          resizeObserver.observe(this);
-        });
-      },
-      slideChange: function () {
-        // Small timeout to ensure the active slide is updated
-        setTimeout(() => {
-          resetInactiveVimeoPlayers();
-
-          // Force update after a bit more time for video to potentially resize
-          setTimeout(() => {
-            customerSwiper.update();
-          }, 300);
-        }, 50);
       },
     },
   });
 
-  customerSwiper.snapGrid[customerSwiper.snapGrid.length - 1] =
-    customerSwiper.slidesGrid[customerSwiper.slidesGrid.length - 1];
-
-  // Function to reset all Vimeo players except the one in the active slide
-  function resetInactiveVimeoPlayers() {
-    // Get the active slide
-    const activeSlide = $('.swiper.swiper-customers .swiper-slide-active');
-
+  // Function to reset all Vimeo players except the one in the provided container
+  function resetInactiveVimeoPlayers(excludeContainer) {
     // Get all Vimeo players
     const allVimeoPlayers = $('[data-vimeo-player-init]');
 
-    // Get the Vimeo player in the active slide (if any)
-    const activeVimeoPlayer = activeSlide.find('[data-vimeo-player-init]');
+    // If we have an exclude container, find the player inside it
+    let excludePlayerId = null;
+    if (excludeContainer) {
+      const playerInContainer = $(excludeContainer).find('[data-vimeo-player-init]');
+      if (playerInContainer.length > 0) {
+        excludePlayerId = playerInContainer.attr('id');
+      }
+    }
 
     // Process all players
     allVimeoPlayers.each(function () {
-      // Check if this is not the player in the active slide
-      if (!activeVimeoPlayer.length || !activeVimeoPlayer.is($(this))) {
-        // Set data-vimeo-activated to false for all inactive players
-        $(this).attr('data-vimeo-activated', 'false');
+      // Skip if this is the player we want to exclude
+      if (excludePlayerId && $(this).attr('id') === excludePlayerId) {
+        return true; // This is jQuery's .each() version of "continue"
+      }
 
-        // Only pause the players that are currently playing
-        if ($(this).attr('data-vimeo-playing') === 'true') {
-          const playerId = $(this).attr('id');
+      // Set data-vimeo-activated to false for all inactive players
+      $(this).attr('data-vimeo-activated', 'false');
 
-          // Update playing state
-          $(this).attr('data-vimeo-playing', 'false');
+      // Only pause the players that are currently playing
+      if ($(this).attr('data-vimeo-playing') === 'true') {
+        const playerId = $(this).attr('id');
 
-          // Use our global pause function
-          if (playerId && window.vimeoPlayerInstances && window.vimeoPlayerInstances[playerId]) {
-            window.vimeoPlayerInstances[playerId].pause();
-          }
+        // Update playing state
+        $(this).attr('data-vimeo-playing', 'false');
+
+        // Use our global pause function
+        if (playerId && window.vimeoPlayerInstances && window.vimeoPlayerInstances[playerId]) {
+          window.vimeoPlayerInstances[playerId].pause();
         }
-      } else {
-        // This is the active player - add a delayed update for when video loads/changes size
-        $(this).one('play', function () {
-          // Update swiper when video starts playing (may change dimensions)
-          setTimeout(() => customerSwiper.update(), 100);
-        });
       }
     });
   }
 
   // Add additional method to force update after potential dimension changes
-  const forceRecalculateSwiper = () => {
+  const forceRecalculateSwiper = (index) => {
     if (customerSwiper) {
       // Force update layout
       customerSwiper.updateSize();
       customerSwiper.updateSlides();
       customerSwiper.updateProgress();
       customerSwiper.updateSlidesClasses();
-      customerSwiper.slideTo(customerSwiper.activeIndex, 0);
+      customerSwiper.slideTo(index);
       customerSwiper.update();
     }
   };
@@ -303,14 +271,10 @@ const initCustomers = () => {
   const slides = document.querySelectorAll('.swiper-customers .swiper-slide');
   slides.forEach((slide, index) => {
     slide.addEventListener('click', () => {
+      resetInactiveVimeoPlayers($(slide));
       setTimeout(() => {
-        customerSwiper.update();
-        customerSwiper.slideTo(index);
-
-        // Force multiple updates to handle delayed size changes
-        setTimeout(forceRecalculateSwiper, 300);
-        setTimeout(forceRecalculateSwiper, 600);
-      }, 100);
+        forceRecalculateSwiper(index);
+      }, 700);
     });
   });
 
