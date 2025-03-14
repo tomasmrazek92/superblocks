@@ -266,7 +266,7 @@ const initCustomers = () => {
 
   // Add additional method to force update after potential dimension changes
   const forceRecalculateSwiper = (index) => {
-    if (customerSwiper) {
+    if (customerSwiper && window.innerWidth > 991) {
       // Force update layout
       customerSwiper.updateSize();
       customerSwiper.updateSlides();
