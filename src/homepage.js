@@ -212,6 +212,11 @@ const initCustomers = () => {
       init: function () {
         initVimeoPlayer();
       },
+      beforeSlideChangeStart: function () {
+        if (window.innerWidth <= 991) {
+          resetInactiveVimeoPlayers();
+        }
+      },
     },
   });
 
@@ -276,6 +281,10 @@ const initCustomers = () => {
         forceRecalculateSwiper(index);
       }, 700);
     });
+  });
+
+  $('[data-vimeo-control="close"').on('click', function () {
+    resetInactiveVimeoPlayers();
   });
 
   // Listen for Vimeo video events that might affect size
