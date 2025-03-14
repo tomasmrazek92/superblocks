@@ -198,15 +198,20 @@ const initCustomers = () => {
       enabled: true,
       forceToAxis: true,
     },
-    freeMode: {
-      enabled: true,
-    },
     pagination: {
       el: `.customer_nav`,
       type: 'bullets',
       bulletActiveClass: 'cc-active',
       bulletClass: 'slider-dot',
       clickable: true,
+    },
+    breakpoints: {
+      // When window width is >= 992px (desktop)
+      992: {
+        freeMode: {
+          enabled: true,
+        },
+      },
     },
     on: {
       init: function () {
