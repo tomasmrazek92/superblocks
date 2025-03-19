@@ -1,3 +1,5 @@
+import { initSwipers } from './utils/globalFunctions';
+
 // #region Dynamic Links for Tabs
 $('.w-tab-link [data-href]').click(function () {
   var url = $(this).attr('data-href');
@@ -24,18 +26,20 @@ $('.w-tab-link [data-href]').click(function () {
 // #region AI Tabs
 function initAITabs() {
   let swiperTabs;
+  const DEFAULT_DURATION = 18; // Fallback duration in seconds
 
   if (!$('.ai-tabs_wrap').length) return;
 
-  const initSwiper = () => {
-    // Create a timeline for better control
-    const tl = gsap.timeline();
+  const initSwiper = (videoDuration) => {
+    // Use the video duration or default to 15 seconds
+    const slideDuration = videoDuration || DEFAULT_DURATION;
+    console.log(`Initializing swiper with duration: ${slideDuration}s`);
 
     return new Swiper('.ai-tabs_slider', {
       slidesPerView: 'auto',
       spaceBetween: 8,
       autoplay: {
-        delay: 15000,
+        delay: slideDuration * 1000, // Convert to milliseconds
         disableOnInteraction: false,
       },
       loop: true,
@@ -53,16 +57,7 @@ function initAITabs() {
       on: {
         init: (swiper) => {
           hightlightItem(swiper.realIndex);
-          gsap.killTweensOf('.ai-tabs_progress-line');
-          gsap.fromTo(
-            '.ai-tabs_progress-line',
-            { scaleX: 0 },
-            {
-              scaleX: 1,
-              duration: 15,
-              ease: 'none',
-            }
-          );
+          animateProgressBar(slideDuration);
         },
         beforeSlideChange: () => {
           // Immediately kill all tweens of this element
@@ -71,37 +66,98 @@ function initAITabs() {
         },
         slideChange: (swiper) => {
           hightlightItem(swiper.realIndex);
-          // Force a new tween
-          gsap.fromTo(
-            '.ai-tabs_progress-line',
-            { scaleX: 0 },
-            {
-              scaleX: 1,
-              duration: 15,
-              ease: 'none',
-              immediateRender: true,
-            }
-          );
+          // Get current slide video duration if it exists
+          const currentSlide = $(swiper.slides[swiper.activeIndex]);
+          const video = currentSlide.find('video')[0];
+
+          // Use video duration or default
+          const currentDuration =
+            video && video.duration && !isNaN(video.duration) ? video.duration : slideDuration;
+
+          // Update autoplay delay dynamically
+          swiper.params.autoplay.delay = currentDuration * 1000;
+
+          // Force a new tween with current duration
+          animateProgressBar(currentDuration);
+
+          // If it's a video, ensure it's playing from the beginning
+          if (video) {
+            video.currentTime = 0;
+            video.play().catch((e) => console.log('Video play error:', e));
+          }
         },
       },
     });
   };
 
+  // Function to animate progress bar
+  function animateProgressBar(duration) {
+    gsap.fromTo(
+      '.ai-tabs_progress-line',
+      { scaleX: 0 },
+      {
+        scaleX: 1,
+        duration: duration,
+        ease: 'none',
+        immediateRender: true,
+      }
+    );
+  }
+
+  // First, try to get the first slide's video and hook to play event
+  function checkFirstVideoAndInit() {
+    const firstSlideVideo = $('.ai-tabs_slider .swiper-slide').first().find('video')[0];
+
+    if (firstSlideVideo) {
+      console.log('Found first slide video, waiting for play event...');
+
+      // Listen for the play event which will be triggered by your scroll script
+      firstSlideVideo.addEventListener('play', function onFirstPlay() {
+        if (swiperTabs) return; // Only initialize once
+
+        console.log(`Video playing, duration: ${firstSlideVideo.duration}s`);
+        const videoDuration =
+          firstSlideVideo.duration && !isNaN(firstSlideVideo.duration)
+            ? firstSlideVideo.duration
+            : DEFAULT_DURATION;
+
+        swiperTabs = initSwiper(videoDuration);
+
+        // Remove the event listener after initialization
+        firstSlideVideo.removeEventListener('play', onFirstPlay);
+      });
+
+      // Fallback in case video never plays
+      setTimeout(() => {
+        if (!swiperTabs) {
+          console.log('Video play timeout, initializing with default duration');
+          swiperTabs = initSwiper(DEFAULT_DURATION);
+        }
+      }, 5000); // 5 second timeout
+    } else {
+      // No video found, initialize with default duration
+      console.log('No video found in first slide, using default duration');
+      swiperTabs = initSwiper(DEFAULT_DURATION);
+    }
+  }
+
   const observer = new IntersectionObserver(
     (entries, observer) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          swiperTabs = initSwiper(); // Initialize Swiper when the element is in view
+          checkFirstVideoAndInit(); // Initialize when the element is in view
           observer.disconnect(); // Stop observing after initialization
         }
       });
     },
     { threshold: 0.1 }
-  ); // Adjust the threshold as needed
+  );
 
   observer.observe(document.querySelector('.ai-tabs_wrap'));
 
   $('.ai-tabs_pane-item').on('click', function () {
+    if (!swiperTabs) return; // Safety check
+
     var index = $('.ai-tabs_pane-item').index(this);
     swiperTabs.slideToLoop(index);
   });
@@ -734,3 +790,54 @@ let partnerSlider = new Swiper('.hp_partner-bottom', {
   threshold: 20,
 });
 // #endregion
+
+function animateProgressBar(parent, duration) {
+  gsap.fromTo(
+    $(parent).find('.slider-progress_bg'),
+    { width: '0%' },
+    { width: '100%', duration: duration / 1000 }
+  );
+}
+
+// Sample data for swiperInstances, specific to this page
+const swiperInstances = [
+  [
+    '.section_hp-slider',
+    '.swiper-cs',
+    'cs-slider',
+    {
+      slidesPerView: 'auto',
+      loop: true,
+      speed: 1000,
+      centeredSlides: false,
+      autoplay: { delay: 3000 },
+      spaceBetween: 20,
+      on: {
+        init: (swiper) => {
+          animateProgressBar('.section_hp-slider', 5000);
+        },
+        slideChange: (swiper) => {
+          animateProgressBar('.section_hp-slider', 5000);
+        },
+      },
+    },
+    'all',
+  ],
+  [
+    '.slider-wrapper',
+    '.swiper-news',
+    'news-slider',
+    {
+      slidesPerView: 'auto',
+      effect: 'fade',
+      pagination: {
+        el: '.swiper-nav.is-news',
+        type: 'fraction',
+      },
+    },
+    'all',
+  ],
+];
+
+// Initialize swipers with instances specific to this page
+initSwipers(swiperInstances);
