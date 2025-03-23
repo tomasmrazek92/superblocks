@@ -373,202 +373,34 @@ function initVimeoPlayer() {
     // Create a promise for this video's loading
     const loadPromise = new Promise((resolve) => {
       // Add URL after we've setup the promise to ensure we don't miss events
-      const vimeoVideoURL = `https://player.vimeo.com/video/${vimeoVideoID}?api=1&background=1&autoplay=0&loop=0&muted=1&quality=auto`;
+      const vimeoVideoURL = `https://player.vimeo.com/video/${vimeoVideoID}?api=1&background=1&autoplay=0&loop=0&muted=1&quality=auto&preload=auto`;
       vimeoElement.querySelector('iframe').setAttribute('src', vimeoVideoURL);
+      vimeoElement.querySelector('iframe').setAttribute('allow', 'autoplay');
 
       const iframeID = vimeoElement.id;
       const player = new Vimeo.Player(iframeID);
 
-      /**
-       * Enhanced Vimeo Preloader
-       * Uses buffer fetching approach instead of play/pause
-       */
-      function preloadVimeoVideo(vimeoElement, vimeoVideoID, videoIndexID) {
-        return new Promise((resolve) => {
-          // Skip if already preloaded
-          if (vimeoElement.getAttribute('data-vimeo-preloaded')) {
-            resolve(videoIndexID);
-            return;
-          }
-
-          // Mark as in-progress
-          vimeoElement.setAttribute('data-vimeo-preloaded', 'in-progress');
-
-          // Get or create player
-          let player = $(vimeoElement).data('vimeoPlayer');
-          if (!player) {
-            // If using Vimeo player SDK, initialize it
-            player = new Vimeo.Player(vimeoElement);
-            $(vimeoElement).data('vimeoPlayer', player);
-          }
-
-          // Set a more reasonable timeout (30s still, but can be adjusted)
-          const timeoutId = setTimeout(() => {
-            vimeoElement.setAttribute('data-vimeo-preloaded', 'timeout');
-            resolve(videoIndexID);
-          }, 30000);
-
-          // Disable autoplay temporarily if it's set
-          let originalAutoplay = vimeoElement.getAttribute('autoplay');
-          if (originalAutoplay) {
-            vimeoElement.removeAttribute('autoplay');
-          }
-
-          // Track loading progress to determine when sufficient buffering has occurred
-          let loadingCheckInterval;
-          let progressCounter = 0;
-
-          // Use the getVideoUrl API to help trigger CDN loading
-          player.getVideoUrl().then((url) => {
-            // Force quality selection to lowest to speed up initial buffering
-            player.setQuality('360p').catch(() => {});
-          });
-
-          // Listen for basic events
-          player.on('loaded', function () {
-            // Start checking buffer progress
-            loadingCheckInterval = setInterval(() => {
-              player
-                .getBuffered()
-                .then((buffered) => {
-                  if (buffered && buffered.length > 0) {
-                    const bufferSeconds = buffered[0][1]; // End time of first buffer segment
-
-                    // Consider preloaded if we have at least 5 seconds buffered or checked 10 times
-                    if (bufferSeconds >= 5 || progressCounter >= 10) {
-                      clearInterval(loadingCheckInterval);
-                      clearTimeout(timeoutId);
-
-                      // Reset autoplay if it was originally set
-                      if (originalAutoplay) {
-                        vimeoElement.setAttribute('autoplay', originalAutoplay);
-                      }
-
-                      vimeoElement.setAttribute('data-vimeo-preloaded', 'true');
-                      resolve(videoIndexID);
-                    }
-
-                    progressCounter++;
-                  }
-                })
-                .catch((err) => {
-                  progressCounter++;
-                });
-            }, 1000); // Check buffer progress every second
-          });
-
-          // Fallback for load error
-          player.on('error', function (error) {
-            clearInterval(loadingCheckInterval);
-            clearTimeout(timeoutId);
-            console.error(`Error preloading video ${vimeoVideoID}:`, error);
-            vimeoElement.setAttribute('data-vimeo-preloaded', 'error');
-            resolve(videoIndexID);
-          });
-
-          // Force preload by setting specific loading attributes
-          $(vimeoElement).attr({
-            'data-vimeo-background': '1',
-            'data-vimeo-byline': '0',
-            'data-vimeo-controls': '0',
-            'data-vimeo-portrait': '0',
-            'data-vimeo-title': '0',
-          });
-
-          // Additional trigger to start loading by seeking to different points
-          setTimeout(() => {
-            player.setCurrentTime(0.1).catch(() => {});
-            setTimeout(() => {
-              player.setCurrentTime(0).catch(() => {});
-            }, 500);
-          }, 100);
-        });
-      }
-
-      // Function to preload multiple videos sequentially
-      function preloadVimeoVideos(videoSelector = 'iframe[src*="vimeo.com"]') {
-        return new Promise((resolve) => {
-          const videos = $(videoSelector).toArray();
-
-          // Log details about each found video for debugging
-          videos.forEach((video, index) => {
-            const src = $(video).attr('src') || 'no-src';
-            const id = $(video).attr('id') || 'no-id';
-            const classes = $(video).attr('class') || 'no-class';
-          });
-
-          if (videos.length === 0) {
-            resolve([]);
-            return;
-          }
-
-          // Process videos sequentially for better performance
-          const preloadPromises = [];
-          let currentIndex = 0;
-
-          function preloadNext() {
-            if (currentIndex >= videos.length) {
-              resolve(preloadPromises);
-              return;
-            }
-
-            const video = videos[currentIndex];
-            // Extract Vimeo ID from src attribute with more robust pattern matching
-            let videoID = $(video).attr('data-vimeo-id');
-            if (!videoID) {
-              const src = $(video).attr('src') || '';
-              const idMatch =
-                src.match(/(?:video|player\.vimeo\.com)\/(\d+)/i) ||
-                src.match(/vimeo\.com\/(?:.*?\/)?(\d+)/i);
-              videoID = idMatch ? idMatch[1] : null;
-            }
-
-            if (!videoID) {
-              console.warn('Video without ID found, skipping', video);
-              currentIndex++;
-              preloadNext();
-              return;
-            }
-
-            preloadVimeoVideo(video, videoID, currentIndex).then(() => {
-              preloadPromises.push(currentIndex);
-              currentIndex++;
-              preloadNext();
+      // Force preload by doing a silent play/pause
+      player.ready().then(function () {
+        // Ensure we're muted first for autoplay policy
+        player.setVolume(0).then(function () {
+          // Set a very small playback position to trigger buffer loading
+          player.setCurrentTime(0.1).then(function () {
+            // Attempt to play silently to trigger buffering
+            player.play().catch(function (error) {
+              // This might fail due to autoplay restrictions, but the
+              // setCurrentTime and initial connection should still help with preloading
             });
-          }
 
-          // Start preloading process
-          preloadNext();
+            // Set a timeout to pause the video after a brief moment
+            // This keeps the video buffered but not playing
+            setTimeout(function () {
+              player.pause();
+              // Reset to beginning
+              player.setCurrentTime(0);
+            }, 100);
+          });
         });
-      }
-
-      // Usage example
-      $(document).ready(function () {
-        // Try different common Vimeo selectors
-        const vimeoSelectors = [
-          'iframe[src*="player.vimeo.com"]',
-          'iframe[src*="vimeo.com"]',
-          '.w-video iframe',
-          '.w-iframe iframe',
-          'iframe.vimeo-player',
-          'iframe[data-vimeo-id]',
-        ];
-
-        // Check each selector and log results
-        vimeoSelectors.forEach((selector) => {
-          const count = $(selector).length;
-
-          if (count > 0) {
-            // Log the first element for debugging
-            const firstEl = $(selector)[0];
-          }
-        });
-
-        // Use a broader selector that should catch any Vimeo iframe
-        const anyVimeoSelector = 'iframe[src*="vimeo.com"]';
-
-        // Start preloading Vimeo videos with a more generic selector
-        preloadVimeoVideos(anyVimeoSelector).then((results) => {});
       });
 
       // Function: Play Video
@@ -860,14 +692,6 @@ window.pauseAllVimeoPlayers = function () {
   return false;
 };
 
-// Create global function to check if all videos are preloaded
-window.areVimeoVideosPreloaded = function () {
-  if (window.vimeoLoadPromises && window.vimeoLoadPromises.length > 0) {
-    return Promise.all(window.vimeoLoadPromises);
-  }
-  return Promise.resolve([]);
-};
-
 // Add jQuery method for Vimeo control
 $.fn.pauseVimeo = function () {
   return this.each(function () {
@@ -877,6 +701,7 @@ $.fn.pauseVimeo = function () {
     }
   });
 };
+// #endregion
 // #endregion
 
 // #region Centralize
