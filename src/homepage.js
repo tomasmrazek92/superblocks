@@ -27,20 +27,19 @@ $('.w-tab-link [data-href]').click(function () {
 function initAITabs() {
   let swiperTabs;
   const DEFAULT_DURATION = 18; // Fallback duration in seconds
+  let hasBeenVisible = false; // Track if section has been visible
 
   if (!$('.ai-tabs_wrap').length) return;
 
+  // Function to initialize swiper without autoplay initially
   const initSwiper = (videoDuration) => {
-    // Use the video duration or default to 15 seconds
+    // Use the video duration or default to 18 seconds
     const slideDuration = videoDuration || DEFAULT_DURATION;
 
     return new Swiper('.ai-tabs_slider', {
       slidesPerView: 'auto',
       spaceBetween: 8,
-      autoplay: {
-        delay: slideDuration * 1000, // Convert to milliseconds
-        disableOnInteraction: false,
-      },
+      autoplay: false, // Start with autoplay disabled
       loop: true,
       pagination: {
         el: '.platform-tabs_nav',
@@ -56,7 +55,7 @@ function initAITabs() {
       on: {
         init: (swiper) => {
           hightlightItem(swiper.realIndex);
-          animateProgressBar(slideDuration);
+          // Don't animate progress initially
         },
         beforeSlideChange: () => {
           // Immediately kill all tweens of this element
@@ -65,24 +64,28 @@ function initAITabs() {
         },
         slideChange: (swiper) => {
           hightlightItem(swiper.realIndex);
-          // Get current slide video duration if it exists
-          const currentSlide = $(swiper.slides[swiper.activeIndex]);
-          const video = currentSlide.find('video')[0];
 
-          // Use video duration or default
-          const currentDuration =
-            video && video.duration && !isNaN(video.duration) ? video.duration : slideDuration;
+          // Only manipulate videos if the section has been visible
+          if (hasBeenVisible) {
+            // Get current slide video duration if it exists
+            const currentSlide = $(swiper.slides[swiper.activeIndex]);
+            const video = currentSlide.find('video')[0];
 
-          // Update autoplay delay dynamically
-          swiper.params.autoplay.delay = currentDuration * 1000;
+            // Use video duration or default
+            const currentDuration =
+              video && video.duration && !isNaN(video.duration) ? video.duration : slideDuration;
 
-          // Force a new tween with current duration
-          animateProgressBar(currentDuration);
+            // Update autoplay delay dynamically
+            swiper.params.autoplay.delay = currentDuration * 1000;
 
-          // If it's a video, ensure it's playing from the beginning
-          if (video) {
-            video.currentTime = 0;
-            video.play().catch((e) => console.log('Video play error:', e));
+            // Force a new tween with current duration
+            animateProgressBar(currentDuration);
+
+            // If it's a video, ensure it's playing from the beginning
+            if (video) {
+              video.currentTime = 0;
+              video.play().catch((e) => console.log('Video play error:', e));
+            }
           }
         },
       },
@@ -103,57 +106,117 @@ function initAITabs() {
     );
   }
 
-  // First, try to get the first slide's video and hook to play event
-  function checkFirstVideoAndInit() {
-    const firstSlideVideo = $('.ai-tabs_slider .swiper-slide').first().find('video')[0];
+  // Initialize Swiper immediately on page load, but without autoplay
+  swiperTabs = initSwiper(DEFAULT_DURATION);
+
+  // Function to start the tabs when scrolled into view
+  function startTabsWithVideo() {
+    if (hasBeenVisible) return; // Only run once
+
+    hasBeenVisible = true;
+    console.log('Tab section now visible, starting tabs');
+
+    // Ensure we're on the first slide (with loop mode handling)
+    swiperTabs.slideToLoop(0, 0);
+
+    // Get the active slide's video after ensuring we're on the correct slide
+    const activeSlide = $(swiperTabs.slides[swiperTabs.activeIndex]);
+    const firstSlideVideo = activeSlide.find('video')[0];
+
+    // Set up video and autoplay
+    let duration = DEFAULT_DURATION;
 
     if (firstSlideVideo) {
-      // Listen for the play event which will be triggered by your scroll script
-      firstSlideVideo.addEventListener('play', function onFirstPlay() {
-        if (swiperTabs) return; // Only initialize once
-
-        const videoDuration =
-          firstSlideVideo.duration && !isNaN(firstSlideVideo.duration)
-            ? firstSlideVideo.duration
-            : DEFAULT_DURATION;
-
-        swiperTabs = initSwiper(videoDuration);
-
-        // Remove the event listener after initialization
-        firstSlideVideo.removeEventListener('play', onFirstPlay);
+      // Make sure all other videos are paused
+      $('.ai-tabs_slider .swiper-slide video').each(function () {
+        if (this !== firstSlideVideo) {
+          this.pause();
+          this.currentTime = 0;
+        }
       });
 
-      // Fallback in case video never plays
-      setTimeout(() => {
-        if (!swiperTabs) {
-          swiperTabs = initSwiper(DEFAULT_DURATION);
-        }
-      }, 5000); // 5 second timeout
+      // Reset and prepare video
+      firstSlideVideo.currentTime = 0;
+      firstSlideVideo.muted = true; // Mute to avoid autoplay restrictions
+
+      // Play the video now that we've scrolled to it
+      const playPromise = firstSlideVideo.play();
+
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            // Get duration once video is actually playing
+            duration =
+              firstSlideVideo.duration && !isNaN(firstSlideVideo.duration)
+                ? firstSlideVideo.duration
+                : DEFAULT_DURATION;
+
+            // Set up autoplay with the correct duration
+            swiperTabs.params.autoplay = {
+              delay: duration * 1000,
+              disableOnInteraction: false,
+            };
+
+            // Start the autoplay with the proper timing
+            swiperTabs.autoplay.start();
+
+            // Start the progress animation
+            animateProgressBar(duration);
+          })
+          .catch((e) => {
+            console.log('Video play error:', e);
+            startWithDefault();
+          });
+      } else {
+        startWithDefault();
+      }
     } else {
-      // No video found, initialize with default duration
-      swiperTabs = initSwiper(DEFAULT_DURATION);
+      startWithDefault();
+    }
+
+    // Helper for starting with default duration
+    function startWithDefault() {
+      duration = DEFAULT_DURATION;
+      swiperTabs.params.autoplay = {
+        delay: duration * 1000,
+        disableOnInteraction: false,
+      };
+      swiperTabs.autoplay.start();
+      animateProgressBar(duration);
     }
   }
 
+  // Initialize the observer to detect when tab section is visible
   const observer = new IntersectionObserver(
     (entries, observer) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          checkFirstVideoAndInit(); // Initialize when the element is in view
+          console.log('Tab section is now visible');
+          // Small delay to ensure DOM is ready
+          setTimeout(() => {
+            // Start everything when section becomes visible
+            startTabsWithVideo();
+          }, 100);
           observer.disconnect(); // Stop observing after initialization
         }
       });
     },
-    { threshold: 0.1 }
+    { threshold: 1 } // Lower threshold for easier triggering
   );
 
   observer.observe(document.querySelector('.ai-tabs_wrap'));
 
+  // Handle tab clicks
   $('.ai-tabs_pane-item').on('click', function () {
     if (!swiperTabs) return; // Safety check
 
     var index = $('.ai-tabs_pane-item').index(this);
     swiperTabs.slideToLoop(index);
+
+    // If we haven't started yet (clicked before scrolling into view)
+    if (!hasBeenVisible) {
+      startTabsWithVideo();
+    }
   });
 
   function hightlightItem(index) {
