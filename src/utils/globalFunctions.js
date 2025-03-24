@@ -57,16 +57,6 @@ const getMergedSwiperOptions = (options, uniqueKey) => {
       prevEl: `[swiper-arrow="prev"].${uniqueKey}`,
       nextEl: `[swiper-arrow="next"].${uniqueKey}`,
     },
-    pagination: {
-      el: `.swiper-navigation.${uniqueKey}`,
-      type: 'bullets',
-      bulletActiveClass: 'active',
-      bulletClass: 'swiper-bullet',
-      clickable: true,
-      renderBullet: function (index, className) {
-        return '<span class="' + className + '">' + '<b></b>' + '</span>';
-      },
-    },
   });
 };
 

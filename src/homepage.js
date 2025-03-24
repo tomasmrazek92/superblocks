@@ -257,7 +257,7 @@ const initCustomers = () => {
     },
     breakpoints: {
       // When window width is >= 992px (desktop)
-      992: {
+      480: {
         freeMode: {
           enabled: true,
         },
@@ -268,7 +268,7 @@ const initCustomers = () => {
         initVimeoPlayer();
       },
       beforeSlideChangeStart: function () {
-        if (window.innerWidth <= 991) {
+        if (window.innerWidth <= 479) {
           resetInactiveVimeoPlayers();
         }
       },
@@ -316,7 +316,7 @@ const initCustomers = () => {
 
   // Add additional method to force update after potential dimension changes
   const forceRecalculateSwiper = (index) => {
-    if (customerSwiper && window.innerWidth > 991) {
+    if (customerSwiper && window.innerWidth > 479) {
       // Force update layout
       customerSwiper.updateSize();
       customerSwiper.updateSlides();
@@ -373,35 +373,12 @@ function initVimeoPlayer() {
     // Create a promise for this video's loading
     const loadPromise = new Promise((resolve) => {
       // Add URL after we've setup the promise to ensure we don't miss events
-      const vimeoVideoURL = `https://player.vimeo.com/video/${vimeoVideoID}?api=1&background=0&autoplay=0&loop=0&muted=1&quality=auto&preload=auto`;
+      const vimeoVideoURL = `https://player.vimeo.com/video/${vimeoVideoID}?api=1&background=0&controls=0&autoplay=0&loop=0&muted=1&quality=auto&preload=auto&texttrack=en`;
       vimeoElement.querySelector('iframe').setAttribute('src', vimeoVideoURL);
       vimeoElement.querySelector('iframe').setAttribute('allow', 'autoplay');
 
       const iframeID = vimeoElement.id;
       const player = new Vimeo.Player(iframeID);
-
-      // Force preload by doing a silent play/pause
-      player.ready().then(function () {
-        // Ensure we're muted first for autoplay policy
-        player.setVolume(0).then(function () {
-          // Set a very small playback position to trigger buffer loading
-          player.setCurrentTime(0.1).then(function () {
-            // Attempt to play silently to trigger buffering
-            player.play().catch(function (error) {
-              // This might fail due to autoplay restrictions, but the
-              // setCurrentTime and initial connection should still help with preloading
-            });
-
-            // Set a timeout to pause the video after a brief moment
-            // This keeps the video buffered but not playing
-            setTimeout(function () {
-              player.pause();
-              // Reset to beginning
-              player.setCurrentTime(0);
-            }, 100);
-          });
-        });
-      });
 
       // Function: Play Video
       function vimeoPlayerPlay() {
@@ -702,7 +679,6 @@ $.fn.pauseVimeo = function () {
   });
 };
 // #endregion
-// #endregion
 
 // #region Centralize
 const initCentralize = () => {
@@ -802,6 +778,23 @@ const swiperInstances = [
       },
     },
     'all',
+  ],
+  [
+    '.section_hp-resources',
+    '.blog_collection-wrap',
+    'resources',
+    {
+      slidesPerView: 'auto',
+      spaceBetween: 24,
+      pagination: {
+        el: '.hp-resources_nav',
+        type: 'bullets',
+        bulletActiveClass: 'cc-active',
+        bulletClass: 'slider-dot',
+        clickable: true,
+      },
+    },
+    'mobile',
   ],
 ];
 
