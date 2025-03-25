@@ -436,7 +436,7 @@ function initVimeoPlayer() {
     // Create a promise for this video's loading
     const loadPromise = new Promise((resolve) => {
       // Add URL after we've setup the promise to ensure we don't miss events
-      const vimeoVideoURL = `https://player.vimeo.com/video/${vimeoVideoID}?api=1&background=0&controls=0&autoplay=0&loop=0&muted=1&quality=auto&preload=auto&texttrack=en`;
+      const vimeoVideoURL = `https://player.vimeo.com/video/${vimeoVideoID}?api=1&background=0&controls=0&autoplay=0&loop=0&muted=1&quality=auto&preload=auto`;
       vimeoElement.querySelector('iframe').setAttribute('src', vimeoVideoURL);
       vimeoElement.querySelector('iframe').setAttribute('allow', 'autoplay');
 
