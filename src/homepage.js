@@ -311,6 +311,10 @@ const initCustomers = () => {
       enabled: true,
       forceToAxis: true,
     },
+    navigation: {
+      prevEl: `.swiper-arrow.prev.is-customer`,
+      nextEl: `.swiper-arrow.next.is-customer`,
+    },
     pagination: {
       el: `.customer_nav`,
       type: 'bullets',
