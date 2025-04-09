@@ -419,303 +419,366 @@ const initCustomers = () => {
 const customerSwiper = initCustomers();
 
 function initVimeoPlayer() {
-  // Create a global object to store player instances
   window.vimeoPlayerInstances = {};
-
-  // Array to track loading promises
   window.vimeoLoadPromises = [];
+  window.vimeoPreloadedVideos = {};
 
-  // Select all elements that have [data-vimeo-player-init]
   const vimeoPlayers = document.querySelectorAll('[data-vimeo-player-init]');
 
   vimeoPlayers.forEach(function (vimeoElement, index) {
-    // Add Vimeo URL ID to the iframe [src]
     const vimeoVideoID = vimeoElement.getAttribute('data-vimeo-video-id');
     if (!vimeoVideoID) return;
 
-    // Assign an ID to each element
     const videoIndexID = 'vimeo-player-index-' + index;
     vimeoElement.setAttribute('id', videoIndexID);
 
-    // Create a promise for this video's loading
-    const loadPromise = new Promise((resolve) => {
-      // Add URL after we've setup the promise to ensure we don't miss events
-      const vimeoVideoURL = `https://player.vimeo.com/video/${vimeoVideoID}?api=1&background=0&controls=0&autoplay=0&loop=0&muted=1&quality=auto&preload=auto`;
-      vimeoElement.querySelector('iframe').setAttribute('src', vimeoVideoURL);
-      vimeoElement.querySelector('iframe').setAttribute('allow', 'autoplay');
+    // Load iframe src immediately on page load with muted parameter
+    const vimeoVideoURL = `https://player.vimeo.com/video/${vimeoVideoID}?api=1&background=0&controls=0&autoplay=0&loop=0&muted=1&quality=auto&preload=auto`;
+    const iframe = vimeoElement.querySelector('iframe');
+    iframe.setAttribute('src', vimeoVideoURL);
+    iframe.setAttribute('allow', 'autoplay; fullscreen');
+    // Set default state as muted
+    vimeoElement.setAttribute('data-vimeo-muted', 'true');
 
-      const iframeID = vimeoElement.id;
-      const player = new Vimeo.Player(iframeID);
+    // Setup iframe message handling for preloading
+    window.vimeoPreloadedVideos[videoIndexID] = false;
 
-      // Function: Play Video
-      function vimeoPlayerPlay() {
-        vimeoElement.setAttribute('data-vimeo-activated', 'true');
-        vimeoElement.setAttribute('data-vimeo-playing', 'true');
-        player.play();
+    // Initialize player using the Vimeo Player API
+    const iframeID = vimeoElement.id;
+    const player = new Vimeo.Player(iframeID);
+
+    // Function to handle iframe messages for preloading
+    function handleVimeoMessages(e) {
+      // Verify origin for security
+      if (!/^https?:\/\/player.vimeo.com/.test(e.origin)) {
+        return false;
       }
 
-      // Function: Pause Video
-      function vimeoPlayerPause() {
-        vimeoElement.setAttribute('data-vimeo-playing', 'false');
-        player.pause();
-      }
+      try {
+        const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
 
-      // Store player instance in global object for external access
-      window.vimeoPlayerInstances[videoIndexID] = {
-        player: player,
-        element: vimeoElement,
-        pause: function () {
-          vimeoPlayerPause();
-          // Mark as paused by user to prevent auto-resume
-          vimeoElement.setAttribute('data-vimeo-paused-by-user', 'true');
-        },
-        play: function () {
-          vimeoPlayerPlay();
-        },
-      };
-
-      // Update Aspect Ratio if [data-vimeo-update-size="true"]
-      if (vimeoElement.getAttribute('data-vimeo-update-size') === 'true') {
-        player.getVideoWidth().then(function (width) {
-          player.getVideoHeight().then(function (height) {
-            const beforeEl = vimeoElement.querySelector('.vimeo-player__before');
-            if (beforeEl) {
-              beforeEl.style.paddingTop = (height / width) * 100 + '%';
-            }
-          });
-        });
-      }
-
-      // Loaded
-      player.on('play', function () {
-        vimeoElement.setAttribute('data-vimeo-loaded', 'true');
-      });
-
-      // Autoplay
-      if (vimeoElement.getAttribute('data-vimeo-autoplay') === 'false') {
-        // Autoplay = false
-        player.setVolume(1);
-        player.pause();
-      } else {
-        // Autoplay = true
-        player.setVolume(0);
-        vimeoElement.setAttribute('data-vimeo-muted', 'true');
-
-        // If paused-by-user === false, do scroll-based autoplay
-        if (vimeoElement.getAttribute('data-vimeo-paused-by-user') === 'false') {
-          function checkVisibility() {
-            const rect = vimeoElement.getBoundingClientRect();
-            const inView = rect.top < window.innerHeight && rect.bottom > 0;
-            inView ? vimeoPlayerPlay() : vimeoPlayerPause();
-          }
-
-          // Initial check
-          checkVisibility();
-
-          // Handle scroll
-          window.addEventListener('scroll', checkVisibility);
+        if (data.event === 'ready') {
+          // When player is ready, ensure it's muted before preloading
+          postToVimeo(iframe, 'setVolume', 0);
+          // Then start preloading by playing briefly
+          postToVimeo(iframe, 'play');
+        } else if (data.event === 'playProgress' && !window.vimeoPreloadedVideos[videoIndexID]) {
+          // Once playback starts, immediately pause it - video is now preloaded
+          window.vimeoPreloadedVideos[videoIndexID] = true;
+          postToVimeo(iframe, 'pause');
+          vimeoElement.setAttribute('data-vimeo-preloaded', 'true');
         }
+      } catch (err) {
+        console.warn('Error handling Vimeo message', err);
       }
+    }
 
-      // Click: Play
-      const playBtn = vimeoElement.querySelector('[data-vimeo-control="play"]');
-      if (playBtn) {
-        playBtn.addEventListener('click', function () {
-          // Always set volume to 0 first to avoid pop
+    // Helper function to post messages to Vimeo iframe
+    function postToVimeo(iframe, action, value) {
+      const data = { method: action };
+      if (value !== undefined) {
+        data.value = value;
+      }
+      iframe.contentWindow.postMessage(data, '*');
+    }
+
+    // Listen for messages from the Vimeo iframe
+    if (window.addEventListener) {
+      window.addEventListener('message', handleVimeoMessages, false);
+    } else {
+      window.attachEvent('onmessage', handleVimeoMessages, false);
+    }
+
+    // Tell the player to listen for playProgress events and ensure it's muted
+    player.on('loaded', function () {
+      postToVimeo(iframe, 'addEventListener', 'playProgress');
+      player.setVolume(0);
+    });
+
+    // Function: Play Video
+    function vimeoPlayerPlay() {
+      vimeoElement.setAttribute('data-vimeo-activated', 'true');
+      vimeoElement.setAttribute('data-vimeo-playing', 'true');
+      player.play();
+    }
+
+    // Function: Pause Video
+    function vimeoPlayerPause() {
+      vimeoElement.setAttribute('data-vimeo-playing', 'false');
+      player.pause();
+    }
+
+    // Store player instance in global object for external access
+    window.vimeoPlayerInstances[videoIndexID] = {
+      player: player,
+      element: vimeoElement,
+      iframe: iframe,
+      postMessage: function (action, value) {
+        postToVimeo(iframe, action, value);
+      },
+      pause: function () {
+        vimeoPlayerPause();
+        vimeoElement.setAttribute('data-vimeo-paused-by-user', 'true');
+      },
+      play: function () {
+        vimeoPlayerPlay();
+      },
+    };
+
+    // Update Aspect Ratio if [data-vimeo-update-size="true"]
+    if (vimeoElement.getAttribute('data-vimeo-update-size') === 'true') {
+      player.getVideoWidth().then(function (width) {
+        player.getVideoHeight().then(function (height) {
+          const beforeEl = vimeoElement.querySelector('.vimeo-player__before');
+          if (beforeEl) {
+            beforeEl.style.paddingTop = (height / width) * 100 + '%';
+          }
+        });
+      });
+    }
+
+    // Loaded
+    player.on('play', function () {
+      vimeoElement.setAttribute('data-vimeo-loaded', 'true');
+    });
+
+    // Autoplay
+    if (vimeoElement.getAttribute('data-vimeo-autoplay') === 'false') {
+      player.setVolume(1);
+    } else {
+      player.setVolume(0);
+      vimeoElement.setAttribute('data-vimeo-muted', 'true');
+
+      // If paused-by-user === false, do scroll-based autoplay
+      if (vimeoElement.getAttribute('data-vimeo-paused-by-user') === 'false') {
+        function checkVisibility() {
+          const rect = vimeoElement.getBoundingClientRect();
+          const inView = rect.top < window.innerHeight && rect.bottom > 0;
+          if (inView && window.vimeoPreloadedVideos[videoIndexID]) {
+            vimeoPlayerPlay();
+          } else {
+            vimeoPlayerPause();
+          }
+        }
+
+        // Check visibility after preloading is complete
+        const checkPreloadInterval = setInterval(function () {
+          if (window.vimeoPreloadedVideos[videoIndexID]) {
+            checkVisibility();
+            window.addEventListener('scroll', checkVisibility);
+            clearInterval(checkPreloadInterval);
+          }
+        }, 500);
+      }
+    }
+
+    // Click: Play
+    const playBtn = vimeoElement.querySelector('[data-vimeo-control="play"]');
+    if (playBtn) {
+      playBtn.addEventListener('click', function () {
+        // Unmute the video when user clicks play
+        player.setVolume(1);
+        vimeoElement.setAttribute('data-vimeo-muted', 'false');
+        vimeoPlayerPlay();
+      });
+    }
+
+    // Click: Pause
+    const pauseBtn = vimeoElement.querySelector('[data-vimeo-control="pause"]');
+    if (pauseBtn) {
+      pauseBtn.addEventListener('click', function () {
+        vimeoPlayerPause();
+        if (vimeoElement.getAttribute('data-vimeo-autoplay') === 'true') {
+          vimeoElement.setAttribute('data-vimeo-paused-by-user', 'true');
+          window.removeEventListener('scroll', checkVisibility);
+        }
+      });
+    }
+
+    // Click: Mute
+    const muteBtn = vimeoElement.querySelector('[data-vimeo-control="mute"]');
+    if (muteBtn) {
+      muteBtn.addEventListener('click', function () {
+        if (vimeoElement.getAttribute('data-vimeo-muted') === 'false') {
           player.setVolume(0);
-          vimeoPlayerPlay();
+          vimeoElement.setAttribute('data-vimeo-muted', 'true');
+        } else {
+          player.setVolume(1);
+          vimeoElement.setAttribute('data-vimeo-muted', 'false');
+        }
+      });
+    }
 
-          // If muted attribute is 'true', keep volume at 0, else 1
-          if (vimeoElement.getAttribute('data-vimeo-muted') === 'true') {
-            player.setVolume(0);
-          } else {
-            player.setVolume(1);
-          }
-        });
-      }
+    // Fullscreen
+    const fullscreenSupported = !!(
+      document.fullscreenEnabled ||
+      document.webkitFullscreenEnabled ||
+      document.mozFullScreenEnabled ||
+      document.msFullscreenEnabled
+    );
 
-      // Click: Pause
-      const pauseBtn = vimeoElement.querySelector('[data-vimeo-control="pause"]');
-      if (pauseBtn) {
-        pauseBtn.addEventListener('click', function () {
-          vimeoPlayerPause();
-          // If paused by user => kill the scroll-based autoplay
-          if (vimeoElement.getAttribute('data-vimeo-autoplay') === 'true') {
-            vimeoElement.setAttribute('data-vimeo-paused-by-user', 'true');
-            // Removing scroll listener (if you'd like)
-            window.removeEventListener('scroll', checkVisibility);
-          }
-        });
-      }
+    const fullscreenBtn = vimeoElement.querySelector('[data-vimeo-control="fullscreen"]');
 
-      // Click: Mute
-      const muteBtn = vimeoElement.querySelector('[data-vimeo-control="mute"]');
-      if (muteBtn) {
-        muteBtn.addEventListener('click', function () {
-          if (vimeoElement.getAttribute('data-vimeo-muted') === 'false') {
-            player.setVolume(0);
-            vimeoElement.setAttribute('data-vimeo-muted', 'true');
-          } else {
-            player.setVolume(1);
-            vimeoElement.setAttribute('data-vimeo-muted', 'false');
-          }
-        });
-      }
+    if (!fullscreenSupported && fullscreenBtn) {
+      fullscreenBtn.style.display = 'none';
+    }
 
-      // Fullscreen
-      // Check if Fullscreen API is supported
-      const fullscreenSupported = !!(
-        document.fullscreenEnabled ||
-        document.webkitFullscreenEnabled ||
-        document.mozFullScreenEnabled ||
-        document.msFullscreenEnabled
-      );
+    if (fullscreenBtn) {
+      fullscreenBtn.addEventListener('click', () => {
+        const fullscreenElement = document.getElementById(iframeID);
+        if (!fullscreenElement) return;
 
-      const fullscreenBtn = vimeoElement.querySelector('[data-vimeo-control="fullscreen"]');
-
-      // Hide the fullscreen button if not supported
-      if (!fullscreenSupported && fullscreenBtn) {
-        fullscreenBtn.style.display = 'none';
-      }
-
-      if (fullscreenBtn) {
-        fullscreenBtn.addEventListener('click', () => {
-          const fullscreenElement = document.getElementById(iframeID);
-          if (!fullscreenElement) return;
-
-          const isFullscreen =
-            document.fullscreenElement ||
-            document.webkitFullscreenElement ||
-            document.mozFullScreenElement ||
-            document.msFullscreenElement;
-
-          if (isFullscreen) {
-            // Exit fullscreen
-            vimeoElement.setAttribute('data-vimeo-fullscreen', 'false');
-            (
-              document.exitFullscreen ||
-              document.webkitExitFullscreen ||
-              document.mozCancelFullScreen ||
-              document.msExitFullscreen
-            ).call(document);
-          } else {
-            // Enter fullscreen
-            vimeoElement.setAttribute('data-vimeo-fullscreen', 'true');
-            (
-              fullscreenElement.requestFullscreen ||
-              fullscreenElement.webkitRequestFullscreen ||
-              fullscreenElement.mozRequestFullScreen ||
-              fullscreenElement.msRequestFullscreen
-            ).call(fullscreenElement);
-          }
-        });
-      }
-
-      const handleFullscreenChange = () => {
         const isFullscreen =
           document.fullscreenElement ||
           document.webkitFullscreenElement ||
           document.mozFullScreenElement ||
           document.msFullscreenElement;
 
-        vimeoElement.setAttribute('data-vimeo-fullscreen', isFullscreen ? 'true' : 'false');
-      };
-
-      // Add event listeners for fullscreen changes (with vendor prefixes)
-      [
-        'fullscreenchange',
-        'webkitfullscreenchange',
-        'mozfullscreenchange',
-        'msfullscreenchange',
-      ].forEach((event) => {
-        document.addEventListener(event, handleFullscreenChange);
-      });
-
-      // Convert seconds to mm:ss
-      function secondsTimeSpanToHMS(s) {
-        let h = Math.floor(s / 3600);
-        s -= h * 3600;
-        let m = Math.floor(s / 60);
-        s -= m * 60;
-        return m + ':' + (s < 10 ? '0' + s : s);
-      }
-
-      // Duration
-      const vimeoDuration = vimeoElement.querySelector('[data-vimeo-duration]');
-      player.getDuration().then(function (duration) {
-        if (vimeoDuration) {
-          vimeoDuration.textContent = secondsTimeSpanToHMS(duration);
-        }
-        // Update timeline + progress max
-        const timelineAndProgress = vimeoElement.querySelectorAll(
-          '[data-vimeo-control="timeline"], progress'
-        );
-        timelineAndProgress.forEach((el) => {
-          el.setAttribute('max', duration);
-        });
-      });
-
-      // Timeline
-      const timelineElem = vimeoElement.querySelector('[data-vimeo-control="timeline"]');
-      const progressElem = vimeoElement.querySelector('progress');
-
-      function updateTimelineValue() {
-        player.getDuration().then(function () {
-          const timeVal = timelineElem.value;
-          player.setCurrentTime(timeVal);
-          if (progressElem) {
-            progressElem.value = timeVal;
-          }
-        });
-      }
-
-      if (timelineElem) {
-        ['input', 'change'].forEach((evt) => {
-          timelineElem.addEventListener(evt, updateTimelineValue);
-        });
-      }
-
-      // Progress Time & Timeline (timeupdate)
-      player.on('timeupdate', function (data) {
-        if (timelineElem) {
-          timelineElem.value = data.seconds;
-        }
-        if (progressElem) {
-          progressElem.value = data.seconds;
-        }
-        if (vimeoDuration) {
-          vimeoDuration.textContent = secondsTimeSpanToHMS(Math.trunc(data.seconds));
+        if (isFullscreen) {
+          vimeoElement.setAttribute('data-vimeo-fullscreen', 'false');
+          (
+            document.exitFullscreen ||
+            document.webkitExitFullscreen ||
+            document.mozCancelFullScreen ||
+            document.msExitFullscreen
+          ).call(document);
+        } else {
+          vimeoElement.setAttribute('data-vimeo-fullscreen', 'true');
+          (
+            fullscreenElement.requestFullscreen ||
+            fullscreenElement.webkitRequestFullscreen ||
+            fullscreenElement.mozRequestFullScreen ||
+            fullscreenElement.msRequestFullscreen
+          ).call(fullscreenElement);
         }
       });
+    }
 
-      // Hide controls after hover on Vimeo player
-      let vimeoHoverTimer;
-      vimeoElement.addEventListener('mousemove', function () {
-        if (vimeoElement.getAttribute('data-vimeo-hover') === 'false') {
-          vimeoElement.setAttribute('data-vimeo-hover', 'true');
-        }
-        clearTimeout(vimeoHoverTimer);
-        vimeoHoverTimer = setTimeout(vimeoHoverTrue, 3000);
-      });
+    const handleFullscreenChange = () => {
+      const isFullscreen =
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement;
 
-      function vimeoHoverTrue() {
-        vimeoElement.setAttribute('data-vimeo-hover', 'false');
-      }
+      vimeoElement.setAttribute('data-vimeo-fullscreen', isFullscreen ? 'true' : 'false');
+    };
 
-      // Video Ended
-      function vimeoOnEnd() {
-        vimeoElement.setAttribute('data-vimeo-activated', 'false');
-        vimeoElement.setAttribute('data-vimeo-playing', 'false');
-        player.unload();
-      }
-      player.on('ended', vimeoOnEnd);
+    [
+      'fullscreenchange',
+      'webkitfullscreenchange',
+      'mozfullscreenchange',
+      'msfullscreenchange',
+    ].forEach((event) => {
+      document.addEventListener(event, handleFullscreenChange);
     });
 
-    // Add this promise to our global array
+    // Convert seconds to mm:ss
+    function secondsTimeSpanToHMS(s) {
+      let h = Math.floor(s / 3600);
+      s -= h * 3600;
+      let m = Math.floor(s / 60);
+      s -= m * 60;
+      return m + ':' + (s < 10 ? '0' + s : s);
+    }
+
+    // Duration
+    const vimeoDuration = vimeoElement.querySelector('[data-vimeo-duration]');
+    player.getDuration().then(function (duration) {
+      if (vimeoDuration) {
+        vimeoDuration.textContent = secondsTimeSpanToHMS(duration);
+      }
+      const timelineAndProgress = vimeoElement.querySelectorAll(
+        '[data-vimeo-control="timeline"], progress'
+      );
+      timelineAndProgress.forEach((el) => {
+        el.setAttribute('max', duration);
+      });
+    });
+
+    // Timeline
+    const timelineElem = vimeoElement.querySelector('[data-vimeo-control="timeline"]');
+    const progressElem = vimeoElement.querySelector('progress');
+
+    function updateTimelineValue() {
+      player.getDuration().then(function () {
+        const timeVal = timelineElem.value;
+        player.setCurrentTime(timeVal);
+        if (progressElem) {
+          progressElem.value = timeVal;
+        }
+      });
+    }
+
+    if (timelineElem) {
+      ['input', 'change'].forEach((evt) => {
+        timelineElem.addEventListener(evt, updateTimelineValue);
+      });
+    }
+
+    // Progress Time & Timeline (timeupdate)
+    player.on('timeupdate', function (data) {
+      if (timelineElem) {
+        timelineElem.value = data.seconds;
+      }
+      if (progressElem) {
+        progressElem.value = data.seconds;
+      }
+      if (vimeoDuration) {
+        vimeoDuration.textContent = secondsTimeSpanToHMS(Math.trunc(data.seconds));
+      }
+    });
+
+    // Hide controls after hover on Vimeo player
+    let vimeoHoverTimer;
+    vimeoElement.addEventListener('mousemove', function () {
+      if (vimeoElement.getAttribute('data-vimeo-hover') === 'false') {
+        vimeoElement.setAttribute('data-vimeo-hover', 'true');
+      }
+      clearTimeout(vimeoHoverTimer);
+      vimeoHoverTimer = setTimeout(vimeoHoverTrue, 3000);
+    });
+
+    function vimeoHoverTrue() {
+      vimeoElement.setAttribute('data-vimeo-hover', 'false');
+    }
+
+    // Video Ended
+    function vimeoOnEnd() {
+      vimeoElement.setAttribute('data-vimeo-activated', 'false');
+      vimeoElement.setAttribute('data-vimeo-playing', 'false');
+      player.unload();
+    }
+    player.on('ended', vimeoOnEnd);
+
+    // Create a promise that resolves when video is preloaded
+    const loadPromise = new Promise((resolve) => {
+      const checkPreloadInterval = setInterval(function () {
+        if (window.vimeoPreloadedVideos[videoIndexID]) {
+          clearInterval(checkPreloadInterval);
+          resolve();
+        }
+      }, 500);
+
+      // Resolve after timeout even if preload doesn't complete
+      setTimeout(() => {
+        clearInterval(checkPreloadInterval);
+        resolve();
+      }, 5000);
+    });
+
     window.vimeoLoadPromises.push(loadPromise);
   });
 }
 
+// jQuery document ready initialization
+$(document).ready(function () {
+  if (typeof Vimeo !== 'undefined') {
+    initVimeoPlayer();
+  } else {
+    console.warn('Vimeo Player API not found. Make sure to include the Vimeo Player API script.');
+  }
+});
 // Create global function to pause any Vimeo player by ID
 window.pauseVimeoPlayer = function (playerID) {
   if (window.vimeoPlayerInstances && window.vimeoPlayerInstances[playerID]) {
