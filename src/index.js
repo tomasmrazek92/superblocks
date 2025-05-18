@@ -1,28 +1,56 @@
 $(document).ready(function () {
   // #region Video Modal
-  const videoModalSelector = '.video-modal-wrap';
-  const videoSelector = `${videoModalSelector} video`;
 
   function setupVideoTriggers() {
-    const $videoModal = $(videoModalSelector);
-    const $video = $(videoSelector);
+    const $videoModal = $('.video-modal-wrap');
+    const $video = $videoModal.find(`video`).length
+      ? $videoModal.find(`video`)
+      : $videoModal.find('[data-vimeo-player-init]');
+    console.log($video);
 
     if (!$videoModal.length || !$video.length) return;
 
     function showVideo() {
-      $videoModal.css('display', 'flex');
-      $video[0].load();
-      const playPromise = $video[0].play();
-      if (playPromise !== undefined) {
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-        playPromise.then(() => {}).catch(() => {});
+      // Fade in the modal
+      $videoModal.css('display', 'flex').hide().fadeIn(400);
+
+      // Check if we're dealing with HTML5 video
+      if ($video.is('video')) {
+        $video[0].load();
+        const playPromise = $video[0].play();
+
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              // Video playing successfully
+              $videoModal.addClass('playing');
+            })
+            .catch((error) => {
+              // Auto-play was prevented
+              console.log('Autoplay prevented, user interaction needed');
+            });
+        }
+      }
+      // For Vimeo iframe player
+      else if ($video.is('[data-vimeo-player-init]')) {
+        $video.find('[data-vimeo-control="play"]')[0].click();
       }
     }
 
     function closeVideo() {
-      $videoModal.css('display', 'none');
-      $video[0].pause();
-      $video[0].currentTime = 0;
+      // Fade out the modal
+      $videoModal.fadeOut(300, function () {
+        // Reset video state after fade completes
+        if ($video.is('video')) {
+          $video[0].pause();
+          $video[0].currentTime = 0;
+        }
+        // For Vimeo iframe player
+        else if ($video.is('[data-vimeo-player-init]')) {
+          $video.find('[data-vimeo-control="pause"]')[0].click();
+        }
+        $videoModal.removeClass('playing');
+      });
     }
 
     $('[data-toggle="video"]').on('click', showVideo);

@@ -796,14 +796,6 @@ $(document).ready(function () {
   }
 });
 
-// jQuery document ready initialization
-$(document).ready(function () {
-  if (typeof Vimeo !== 'undefined') {
-    initVimeoPlayer();
-  } else {
-    console.warn('Vimeo Player API not found. Make sure to include the Vimeo Player API script.');
-  }
-});
 // Create global function to pause any Vimeo player by ID
 window.pauseVimeoPlayer = function (playerID) {
   if (window.vimeoPlayerInstances && window.vimeoPlayerInstances[playerID]) {
