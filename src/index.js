@@ -12,29 +12,32 @@ $(document).ready(function () {
 
     function showVideo() {
       // Fade in the modal
-      $videoModal.css('display', 'flex').hide().fadeIn(400);
+      $videoModal
+        .css('display', 'flex')
+        .hide()
+        .fadeIn(400, () => {
+          // Check if we're dealing with HTML5 video
+          if ($video.is('video') && $video.is(':visible')) {
+            $video[0].load();
+            const playPromise = $video[0].play();
 
-      // Check if we're dealing with HTML5 video
-      if ($video.is('video')) {
-        $video[0].load();
-        const playPromise = $video[0].play();
-
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              // Video playing successfully
-              $videoModal.addClass('playing');
-            })
-            .catch((error) => {
-              // Auto-play was prevented
-              console.log('Autoplay prevented, user interaction needed');
-            });
-        }
-      }
-      // For Vimeo iframe player
-      else if ($video.is('[data-vimeo-player-init]')) {
-        $video.find('[data-vimeo-control="play"]')[0].click();
-      }
+            if (playPromise !== undefined) {
+              playPromise
+                .then(() => {
+                  // Video playing successfully
+                  $videoModal.addClass('playing');
+                })
+                .catch((error) => {
+                  // Auto-play was prevented
+                  console.log('Autoplay prevented, user interaction needed');
+                });
+            }
+          }
+          // For Vimeo iframe player
+          else if ($video.is('[data-vimeo-player-init]') && $video.is(':visible')) {
+            $video.find('[data-vimeo-control="play"]')[0].click();
+          }
+        });
     }
 
     function closeVideo() {
