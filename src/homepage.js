@@ -684,15 +684,51 @@ function initVimeoPlayer() {
               document.mozFullScreenElement ||
               document.msFullscreenElement;
 
+            console.log('=== FULLSCREEN CHANGE EVENT ===');
+            console.log('Is fullscreen:', isFullscreen);
+            console.log('Video ID:', videoIndexID);
+
+            const currentPlayingState = vimeoElement.getAttribute('data-vimeo-playing');
+            console.log('Current data-vimeo-playing:', currentPlayingState);
+
             vimeoElement.setAttribute('data-vimeo-fullscreen', isFullscreen ? 'true' : 'false');
 
             if (!isFullscreen) {
-              player.getPaused().then(function (paused) {
-                if (paused) {
-                  vimeoElement.setAttribute('data-vimeo-playing', 'false');
-                }
+              console.log('Exiting fullscreen - checking video state...');
+
+              player
+                .getPaused()
+                .then(function (paused) {
+                  console.log('Video is paused:', paused);
+                  console.log(
+                    'Before update - data-vimeo-playing:',
+                    vimeoElement.getAttribute('data-vimeo-playing')
+                  );
+
+                  if (paused) {
+                    vimeoElement.setAttribute('data-vimeo-playing', 'false');
+                    console.log('Updated data-vimeo-playing to: false');
+                  } else {
+                    console.log('Video is still playing, keeping data-vimeo-playing as true');
+                  }
+
+                  console.log(
+                    'After update - data-vimeo-playing:',
+                    vimeoElement.getAttribute('data-vimeo-playing')
+                  );
+                })
+                .catch(function (error) {
+                  console.log('Error getting paused state:', error);
+                });
+
+              player.getCurrentTime().then(function (time) {
+                console.log('Current video time:', time);
               });
+            } else {
+              console.log('Entering fullscreen mode');
             }
+
+            console.log('=== END FULLSCREEN DEBUG ===');
           };
 
           [
