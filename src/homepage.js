@@ -685,6 +685,14 @@ function initVimeoPlayer() {
               document.msFullscreenElement;
 
             vimeoElement.setAttribute('data-vimeo-fullscreen', isFullscreen ? 'true' : 'false');
+
+            if (!isFullscreen) {
+              player.getPaused().then(function (paused) {
+                if (paused) {
+                  vimeoElement.setAttribute('data-vimeo-playing', 'false');
+                }
+              });
+            }
           };
 
           [
