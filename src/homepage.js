@@ -598,6 +598,7 @@ function initVimeoPlayer() {
               // Unmute the video when user clicks play
               player.setVolume(1);
               vimeoElement.setAttribute('data-vimeo-muted', 'false');
+              console.log('play');
               vimeoPlayerPlay();
             });
           }

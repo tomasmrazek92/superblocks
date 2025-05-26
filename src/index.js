@@ -94,6 +94,7 @@ $(document).ready(function () {
 
   // #region Nav Open/Close
   let ham = '.nav_burger';
+  let navWrapper = '.nav_wrapper';
   let menuOpen = false;
   let scrollPosition;
   $(ham).on('click', function () {
@@ -104,8 +105,10 @@ $(document).ready(function () {
     if (!menuOpen) {
       scrollPosition = $(window).scrollTop();
       $('html, body').scrollTop(0).addClass('overflow-hidden');
+      $(navWrapper).addClass('cc-open');
     } else {
       $('html, body').scrollTop(scrollPosition).removeClass('overflow-hidden');
+      $(navWrapper).removeClass('cc-open');
     }
     menuOpen = !menuOpen;
   };
@@ -123,9 +126,33 @@ $(document).ready(function () {
     }
   }
 
+  // Hide snackClark
+  function trackSnackClark() {
+    let snackBanner = $('.snackbar-clark');
+
+    if (snackBanner.length) {
+      $(navWrapper).addClass('clark-snack');
+      function updateBannerHeight() {
+        let height = snackBanner.outerHeight();
+        document.documentElement.style.setProperty('--clarkSnack', height + 'px');
+      }
+
+      const observer = new ResizeObserver(() => {
+        updateBannerHeight();
+      });
+
+      observer.observe(snackBanner[0]);
+
+      $(window).on('resize', updateBannerHeight);
+
+      updateBannerHeight();
+    }
+  }
+
   // Init
   $(window).scroll(checkNav);
   checkNav();
+  trackSnackClark();
   // #endregion
 
   // #region Modal Opens
