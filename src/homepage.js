@@ -448,7 +448,7 @@ function initVimeoPlayer() {
     vimeoElement.setAttribute('id', videoIndexID);
 
     // Set up iframe src immediately
-    const vimeoVideoURL = `https://player.vimeo.com/video/${vimeoVideoID}?api=1&background=0&playsinline=0&controls=0&autoplay=0&loop=0&muted=1&quality=auto&preload=auto`;
+    const vimeoVideoURL = `https://player.vimeo.com/video/${vimeoVideoID}?api=1&background=0&playsinline=0&controls=0&autoplay=0&loop=0&muted=1&quality=720p&preload=auto`;
     const iframe = vimeoElement.querySelector('iframe');
     iframe.setAttribute('src', vimeoVideoURL);
     iframe.setAttribute('allow', 'autoplay; fullscreen');

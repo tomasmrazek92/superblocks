@@ -6,7 +6,6 @@ $(document).ready(function () {
     const $video = $videoModal.find(`video`).length
       ? $videoModal.find(`video`)
       : $videoModal.find('[data-vimeo-player-init]');
-    console.log($video);
 
     if (!$videoModal.length || !$video.length) return;
 
@@ -62,6 +61,113 @@ $(document).ready(function () {
 
   // Init
   setupVideoTriggers();
+
+  function initModalBasic() {
+    const modalGroup = document.querySelector('[data-modal-group-status]');
+    const modals = document.querySelectorAll('[data-modal-name]');
+    const modalTargets = document.querySelectorAll('[data-modal-target]');
+
+    // Open modal
+    modalTargets.forEach((modalTarget) => {
+      modalTarget.addEventListener('click', function () {
+        const modalTargetName = this.getAttribute('data-modal-target');
+
+        // Close all modals
+        modalTargets.forEach((target) => target.setAttribute('data-modal-status', 'not-active'));
+        modals.forEach((modal) => modal.setAttribute('data-modal-status', 'not-active'));
+
+        // Activate clicked modal
+        let activeTrigger = document.querySelector(`[data-modal-target="${modalTargetName}"]`);
+        let activeModal = document.querySelector(`[data-modal-name="${modalTargetName}"]`);
+
+        activeTrigger.setAttribute('data-modal-status', 'active');
+        activeModal.setAttribute('data-modal-status', 'active');
+
+        // Set group to active
+        if (modalGroup) {
+          modalGroup.setAttribute('data-modal-group-status', 'active');
+        }
+
+        const $video = $(activeModal).find(`video`).length
+          ? $(activeModal).find(`video`)
+          : $(activeModal).find('[data-vimeo-player-init]');
+
+        if ($video.length) {
+          playModalVideo($video);
+        }
+      });
+    });
+
+    // Close modal
+    document.querySelectorAll('[data-modal-close]').forEach((closeBtn) => {
+      closeBtn.addEventListener('click', closeAllModals);
+    });
+
+    // Close modal on `Escape` key
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
+        closeAllModals();
+      }
+    });
+
+    // Function to close all modals
+    function closeAllModals() {
+      modalTargets.forEach((target) => target.setAttribute('data-modal-status', 'not-active'));
+
+      if (modalGroup) {
+        modalGroup.setAttribute('data-modal-group-status', 'not-active');
+      }
+
+      const $videos = $('[data-modal-name]').find('video, [data-vimeo-player-init]');
+
+      if ($videos.length) {
+        $videos.each(function () {
+          pauseModalVideo($(this));
+        });
+      }
+    }
+
+    function playModalVideo(video) {
+      let $video = $(video);
+      // Check if we're dealing with HTML5 video
+      if ($video.is('video') && $video.is(':visible')) {
+        $video[0].load();
+        const playPromise = $video[0].play();
+
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              // Video playing successfully
+              $videoModal.addClass('playing');
+            })
+            .catch((error) => {
+              // Auto-play was prevented
+              console.log('Autoplay prevented, user interaction needed');
+            });
+        }
+      }
+      // For Vimeo iframe player
+      else if ($video.is('[data-vimeo-player-init]') && $video.is(':visible')) {
+        $video.find('[data-vimeo-control="play"]')[0].click();
+      }
+    }
+
+    function pauseModalVideo(video) {
+      let $video = $(video);
+      // Reset video state after fade completes
+      if ($video.is('video')) {
+        $video[0].pause();
+        $video[0].currentTime = 0;
+      }
+      // For Vimeo iframe player
+      else if ($video.is('[data-vimeo-player-init]')) {
+        $video.find('[data-vimeo-control="pause"]')[0].click();
+      }
+    }
+  }
+
+  // Initialize Basic Modal
+  initModalBasic();
 
   // #endregion
 
