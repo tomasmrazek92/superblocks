@@ -952,6 +952,30 @@ const swiperInstances = [
     },
     'mobile',
   ],
+  [
+    '.section-hp_quote',
+    '.swiper',
+    'quotes',
+    {
+      slidesPerView: 1,
+      speed: 1000,
+      autoplay: { delay: 10000 },
+      effect: 'fade',
+      fadeEffect: {
+        crossFade: true,
+      },
+      pagination: {
+        el: '.hp-quote_navigation',
+        type: 'bullets',
+        bulletActiveClass: 'cc-active',
+        bulletClass: 'slider-dot',
+        clickable: true,
+      },
+      // Optional parameters
+      loop: true,
+    },
+    'all',
+  ],
 ];
 
 // Initialize swipers with instances specific to this page
